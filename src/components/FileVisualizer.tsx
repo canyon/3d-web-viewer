@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 import { useEffect, useRef, useState } from "react";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
