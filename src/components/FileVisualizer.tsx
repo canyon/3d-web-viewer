@@ -104,6 +104,13 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       await PCL.init({
         url: `https://cdn.jsdelivr.net/npm/pcl.js@1.13.0/dist/pcl-core.wasm`,
       });
+
+      if (!PCL || !PCL.PointXYZ) {
+        console.error("PCL.js did not initialize correctly!");
+      } else {
+        console.log("PCL.js initialized:", PCL);
+      }
+
       const arrayBuffer = await file.file.arrayBuffer();
       // const arrayBuffer = convertToPCDArrayBuffer(getPoints(500000));
 
