@@ -100,7 +100,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
   const viewerRef = useRef<HTMLCanvasElement>(null);
   const PointCloudViewerRef = useRef<PointCloudViewer>(null);
   const loadPointCloud = async () => {
-    try {
+    // try {
       await PCL.init({
         url: `https://cdn.jsdelivr.net/npm/pcl.js/dist/pcl-core.wasm`,
       });
@@ -138,13 +138,13 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       });
 
       onLog(`Successfully loaded point cloud: ${pcdInfo}`);
-    } catch (error) {
-      onLog(
-        `Failed to load point cloud: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    }
+    // } catch (error) {
+    //   onLog(
+    //     `Failed to load point cloud: ${
+    //       error instanceof Error ? error.message : "Unknown error"
+    //     }`
+    //   );
+    // }
   };
 
   const loadGeoJSON = async () => {
