@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { useEffect, useRef, useState } from "react";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
@@ -9,6 +9,7 @@ import PointCloudViewer from "pcl.js/PointCloudViewer";
 // import * as THREE from "three";
 // import { PCDLoader } from "three/addons/loaders/PCDLoader.js";
 // import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import {PointCloudVisualiser} from 'point-cloud-visualiser'
 
 interface FileVisualizerProps {
   file: UploadedFile;
@@ -118,7 +119,8 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
     const arrayBuffer = await file.file.arrayBuffer();
     // const arrayBuffer = convertToPCDArrayBuffer(getPoints(500000));
 
-    const cloud = PCL.loadPCDData<PCL.PointXYZ>(arrayBuffer, PCL.PointXYZ);
+    // const cloud = PCL.loadPCDData<PCL.PointXYZ>(arrayBuffer, PCL.PointXYZ);
+    const cloud = PCL.loadPCDData(arrayBuffer);
 
     // Print PCD info
     const fileSizeInBytes = arrayBuffer.byteLength;
@@ -283,9 +285,10 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
   }
 
   return (
-    <div ref={containerRef} className="w-full h-full">
-      <canvas ref={viewerRef} className="w-full h-full"></canvas>
-    </div>
+    <PointCloudVisualiser points={getPoints(100000)} />
+    // <div ref={containerRef} className="w-full h-full">
+    //   <canvas ref={viewerRef} className="w-full h-full"></canvas>
+    // </div>
     // <div ref={threeContainerRef} className="w-full h-full" />
   );
 };
