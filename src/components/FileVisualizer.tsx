@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { useEffect, useRef, useState } from "react";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
@@ -107,7 +107,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       const arrayBuffer = await file.file.arrayBuffer();
       // const arrayBuffer = convertToPCDArrayBuffer(getPoints(500000));
 
-      const cloud = PCL.loadPCDData(arrayBuffer, "PointCloudPointXYZ");
+      const cloud = PCL.loadPCDData(arrayBuffer);
 
       // Print PCD info
       const fileSizeInBytes = arrayBuffer.byteLength;
