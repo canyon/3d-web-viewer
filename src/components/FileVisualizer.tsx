@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useRef, useState } from "react";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
@@ -6,6 +5,9 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { UploadedFile, FileType } from "@/types";
 import * as PCL from "pcl.js";
 import PointCloudViewer from "pcl.js/PointCloudViewer";
+// import * as THREE from "three";
+// import { PCDLoader } from "three/addons/loaders/PCDLoader.js";
+// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 interface FileVisualizerProps {
   file: UploadedFile;
@@ -36,6 +38,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
 
   useEffect(() => {
     if (file.type === FileType.POINT_CLOUD) {
+      // initThreeJS();
       loadPointCloud();
     } else if (file.type === FileType.GIS) {
       loadGeoJSON();
@@ -76,7 +79,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
     return points;
   }
 
-  function convertToPCDArrayBuffer(points: number[]) {
+  function convertToPCDArrayBuffer(points: number[][]) {
     const headerLines = [
       "# .PCD v.7 - Point Cloud Data file format",
       "VERSION .7",
@@ -101,51 +104,51 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
   const PointCloudViewerRef = useRef<PointCloudViewer>(null);
   const loadPointCloud = async () => {
     // try {
-      await PCL.init({
-        url: `https://cdn.jsdelivr.net/npm/pcl.js@1.13.0/dist/pcl-core.wasm`,
-      });
+    await PCL.init({
+      url: `https://cdn.jsdelivr.net/npm/pcl.js@1.13.0/dist/pcl-core.wasm`,
+    });
 
-      if (!PCL || !PCL.PointXYZ) {
-        console.error("PCL.js did not initialize correctly!");
-      } else {
-        console.log("PCL.js initialized:", PCL);
-      }
+    if (!PCL || !PCL.PointXYZ) {
+      console.error("PCL.js did not initialize correctly!");
+    } else {
+      console.log("PCL.js initialized:", PCL);
+    }
 
-      const arrayBuffer = await file.file.arrayBuffer();
-      // const arrayBuffer = convertToPCDArrayBuffer(getPoints(500000));
+    const arrayBuffer = await file.file.arrayBuffer();
+    // const arrayBuffer = convertToPCDArrayBuffer(getPoints(500000));
 
-      const cloud = PCL.loadPCDData<PCL.PointXYZ>(arrayBuffer, PCL.PointXYZ);
+    const cloud = PCL.loadPCDData<PCL.PointXYZ>(arrayBuffer, PCL.PointXYZ);
 
-      // Print PCD info
-      const fileSizeInBytes = arrayBuffer.byteLength;
-      const fileSizeInKB = Math.round(fileSizeInBytes / 1024);
-      const fileSizeInMB = fileSizeInBytes / 1024 / 1024;
-      const fileSizeInMBDisplay =
-        fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
-      const pcdInfo =  `File name: ${file.file.name}, Total Points:${cloud.size}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB)`
-      console.log(pcdInfo);
-      console.log(cloud);
+    // Print PCD info
+    const fileSizeInBytes = arrayBuffer.byteLength;
+    const fileSizeInKB = Math.round(fileSizeInBytes / 1024);
+    const fileSizeInMB = fileSizeInBytes / 1024 / 1024;
+    const fileSizeInMBDisplay =
+      fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
+    const pcdInfo = `File name: ${file.file.name}, Total Points:${cloud.size}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB)`;
+    console.log(pcdInfo);
+    console.log(cloud);
 
-      PointCloudViewerRef.current = new PointCloudViewer(
-        viewerRef.current,
-        containerRef.current.clientWidth,
-        containerRef.current.clientHeight
+    PointCloudViewerRef.current = new PointCloudViewer(
+      viewerRef.current,
+      containerRef.current?.clientWidth,
+      containerRef.current?.clientHeight
+    );
+
+    PointCloudViewerRef.current.addPointCloud(cloud);
+    // PointCloudViewerRef.current.setPointCloudProperties({ color: "#F00" });
+    PointCloudViewerRef.current.setAxesHelper({ visible: true, size: 1 });
+    PointCloudViewerRef.current.setCameraParameters({
+      position: { x: 0, y: 0, z: 1.5 },
+    });
+    window.addEventListener("resize", () => {
+      PointCloudViewerRef.current.setSize(
+        containerRef.current?.clientWidth,
+        containerRef.current?.clientHeight
       );
+    });
 
-      PointCloudViewerRef.current.addPointCloud(cloud);
-      // PointCloudViewerRef.current.setPointCloudProperties({ color: "#F00" });
-      PointCloudViewerRef.current.setAxesHelper({ visible: true, size: 1 });
-      PointCloudViewerRef.current.setCameraParameters({
-        position: { x: 0, y: 0, z: 1.5 },
-      });
-      window.addEventListener("resize", () => {
-        PointCloudViewerRef.current.setSize(
-          containerRef.current.clientWidth,
-          containerRef.current.clientHeight
-        );
-      });
-
-      onLog(`Successfully loaded point cloud: ${pcdInfo}`);
+    onLog(`Successfully loaded point cloud: ${pcdInfo}`);
     // } catch (error) {
     //   onLog(
     //     `Failed to load point cloud: ${
@@ -282,6 +285,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
     <div ref={containerRef} className="w-full h-full">
       <canvas ref={viewerRef} className="w-full h-full"></canvas>
     </div>
+    // <div ref={threeContainerRef} className="w-full h-full" />
   );
 };
 

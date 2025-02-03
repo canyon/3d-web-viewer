@@ -1,4 +1,4 @@
 declare module "pcl.js/PointCloudViewer" {
-    const PointCloudViewer: any;
-    export default PointCloudViewer;
-  }
+  import PointCloudViewer from "pcl.js/dist/visualization/PointCloudViewer";
+  export default PointCloudViewer;
+}
