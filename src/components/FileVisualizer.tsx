@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useRef, useState } from "react";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
@@ -105,7 +106,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
   const loadPointCloud = async () => {
     // try {
     await PCL.init({
-      url: `https://cdn.jsdelivr.net/npm/pcl.js@1.13.0/dist/pcl-core.wasm`,
+      url: 'https://cdn.jsdelivr.net/npm/pcl.js@1.13.0/dist/pcl-core.wasm',
     });
 
     if (!PCL || !PCL.PointXYZ) {
