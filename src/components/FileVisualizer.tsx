@@ -102,7 +102,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
   const loadPointCloud = async () => {
     // try {
       await PCL.init({
-        url: `https://cdn.jsdelivr.net/npm/pcl.js/dist/pcl-core.wasm`,
+        url: `https://cdn.jsdelivr.net/npm/pcl.js@1.13.0/dist/pcl-core.wasm`,
       });
       const arrayBuffer = await file.file.arrayBuffer();
       // const arrayBuffer = convertToPCDArrayBuffer(getPoints(500000));
