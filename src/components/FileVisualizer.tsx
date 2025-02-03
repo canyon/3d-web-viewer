@@ -107,7 +107,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       const arrayBuffer = await file.file.arrayBuffer();
       // const arrayBuffer = convertToPCDArrayBuffer(getPoints(500000));
 
-      const cloud = PCL.loadPCDData(arrayBuffer, new PCL.PointXYZ());
+      const cloud = PCL.loadPCDData(arrayBuffer, "PointCloudPointXYZ");
 
       // Print PCD info
       const fileSizeInBytes = arrayBuffer.byteLength;
@@ -117,6 +117,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
         fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
       const pcdInfo =  `File name: ${file.file.name}, Total Points:${cloud.size}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB)`
       console.log(pcdInfo);
+      console.log(cloud);
 
       PointCloudViewerRef.current = new PointCloudViewer(
         viewerRef.current,
