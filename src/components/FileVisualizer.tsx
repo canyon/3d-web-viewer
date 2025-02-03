@@ -107,7 +107,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       const arrayBuffer = await file.file.arrayBuffer();
       // const arrayBuffer = convertToPCDArrayBuffer(getPoints(500000));
 
-      const cloud = PCL.loadPCDData(arrayBuffer);
+      const cloud = PCL.loadPCDData<PCL.PointXYZ>(arrayBuffer, PCL.PointXYZ);
 
       // Print PCD info
       const fileSizeInBytes = arrayBuffer.byteLength;
