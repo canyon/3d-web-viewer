@@ -1,15 +1,14 @@
-// @ts-nocheck
 import { useEffect, useRef, useState } from "react";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { UploadedFile, FileType } from "@/types";
-import * as PCL from "pcl.js";
-import PointCloudViewer from "pcl.js/PointCloudViewer";
-// import * as THREE from "three";
-// import { PCDLoader } from "three/addons/loaders/PCDLoader.js";
-// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import {PointCloudVisualiser} from 'point-cloud-visualiser'
+// import * as PCL from "pcl.js";
+// import PointCloudViewer from "pcl.js/PointCloudViewer";
+import * as THREE from "three";
+import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { GUI } from "dat.gui";
 
 interface FileVisualizerProps {
   file: UploadedFile;
@@ -40,7 +39,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
 
   useEffect(() => {
     if (file.type === FileType.POINT_CLOUD) {
-      // initThreeJS();
+      initThreeJS();
       loadPointCloud();
     } else if (file.type === FileType.GIS) {
       loadGeoJSON();
@@ -101,64 +100,218 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
     return encoder.encode(pcdString);
   }
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const viewerRef = useRef<HTMLCanvasElement>(null);
-  const PointCloudViewerRef = useRef<PointCloudViewer>(null);
-  const loadPointCloud = async () => {
-    // try {
-    await PCL.init({
-      url: 'https://cdn.jsdelivr.net/npm/pcl.js@1.13.0/dist/pcl-core.wasm',
-    });
-
-    if (!PCL || !PCL.PointXYZ) {
-      console.error("PCL.js did not initialize correctly!");
-    } else {
-      console.log("PCL.js initialized:", PCL);
+  const threeContainerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef(new THREE.Scene());
+  const pcdGUI = useRef(new GUI());
+  const rendererRef = useRef<THREE.WebGLRenderer>();
+  const cameraRef = useRef<THREE.PerspectiveCamera>();
+  const controlsRef = useRef<OrbitControls | null>(null);
+  const pcdLoaderRef = useRef(new PCDLoader());
+  const animationFrameId = useRef<number | null>(null);
+  const pointCloudRef = useRef<THREE.Points | null>(null);
+  const [pointSize, setPointSize] = useState(1.0);
+  const initDisplay = () => {
+    if (rendererRef.current) {
+      rendererRef.current.dispose();
+      rendererRef.current = undefined;
     }
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+    }
+    if (threeContainerRef.current) {
+      threeContainerRef.current.innerHTML = "";
+    }
+    if (pointCloudRef.current) {
+      sceneRef.current.remove(pointCloudRef.current);
+    }
+    window.removeEventListener("resize", handleResize);
+  };
 
-    const arrayBuffer = await file.file.arrayBuffer();
-    // const arrayBuffer = convertToPCDArrayBuffer(getPoints(500000));
+  const initThreeJS = () => {
+    if (!threeContainerRef.current) return;
+    initDisplay();
 
-    // const cloud = PCL.loadPCDData<PCL.PointXYZ>(arrayBuffer, PCL.PointXYZ);
-    const cloud = PCL.loadPCDData(arrayBuffer);
+    const width = threeContainerRef.current.clientWidth;
+    const height = threeContainerRef.current.clientHeight;
 
-    // Print PCD info
-    const fileSizeInBytes = arrayBuffer.byteLength;
-    const fileSizeInKB = Math.round(fileSizeInBytes / 1024);
-    const fileSizeInMB = fileSizeInBytes / 1024 / 1024;
-    const fileSizeInMBDisplay =
-      fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
-    const pcdInfo = `File name: ${file.file.name}, Total Points:${cloud.size}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB)`;
-    console.log(pcdInfo);
-    console.log(cloud);
-
-    PointCloudViewerRef.current = new PointCloudViewer(
-      viewerRef.current,
-      containerRef.current?.clientWidth,
-      containerRef.current?.clientHeight
+    cameraRef.current = new THREE.PerspectiveCamera(
+      75,
+      width / height,
+      0.1,
+      1000
     );
+    cameraRef.current.position.z = 5;
 
-    PointCloudViewerRef.current.addPointCloud(cloud);
-    // PointCloudViewerRef.current.setPointCloudProperties({ color: "#F00" });
-    PointCloudViewerRef.current.setAxesHelper({ visible: true, size: 1 });
-    PointCloudViewerRef.current.setCameraParameters({
-      position: { x: 0, y: 0, z: 1.5 },
-    });
-    window.addEventListener("resize", () => {
-      PointCloudViewerRef.current.setSize(
-        containerRef.current?.clientWidth,
-        containerRef.current?.clientHeight
-      );
-    });
+    rendererRef.current = new THREE.WebGLRenderer({ antialias: true });
+    rendererRef.current.setSize(width, height);
+    threeContainerRef.current.appendChild(rendererRef.current.domElement);
+    // threeContainerRef.current.appendChild(pcdGUI.current.domElement);
 
-    onLog(`Successfully loaded point cloud: ${pcdInfo}`);
-    // } catch (error) {
-    //   onLog(
-    //     `Failed to load point cloud: ${
-    //       error instanceof Error ? error.message : "Unknown error"
-    //     }`
-    //   );
+    const axisHelper = new THREE.AxesHelper(100);
+    sceneRef.current.add(axisHelper);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    sceneRef.current.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(0, 1, 0);
+    sceneRef.current.add(directionalLight);
+
+    controlsRef.current = new OrbitControls(
+      cameraRef.current,
+      rendererRef.current.domElement
+    );
+    controlsRef.current.enableDamping = true;
+    controlsRef.current.dampingFactor = 0.05;
+    controlsRef.current.screenSpacePanning = true;
+    // controlsRef.current.minDistance = 0.5;
+    // controlsRef.current.maxDistance = 50;
+    controlsRef.current.update();
+
+    // if ((pcdGUI.current.__controllers.length = 0)) {
+    //   setupGUI();
     // }
+    setupGUI();
+
+    window.addEventListener("resize", handleResize);
+    animate();
+  };
+
+  const handleResize = () => {
+    if (
+      !rendererRef.current ||
+      !cameraRef.current ||
+      !threeContainerRef.current
+    )
+      return;
+
+    const width = threeContainerRef.current.clientWidth;
+    const height = threeContainerRef.current.clientHeight;
+
+    cameraRef.current.aspect = width / height;
+    cameraRef.current.updateProjectionMatrix();
+    rendererRef.current.setSize(width, height);
+  };
+
+  const animate = () => {
+    if (!rendererRef.current || !cameraRef.current) return;
+
+    animationFrameId.current = requestAnimationFrame(animate);
+    controlsRef.current?.update();
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+  };
+
+  const setupGUI = () => {
+    if ((pcdGUI.current.__controllers.length < 2)) {
+      pcdGUI.current
+        .add({ pointSize: 1.0 }, "pointSize", 0.1, 5)
+        .onChange((value: number) => {
+          if (pointCloudRef.current) {
+            (pointCloudRef.current.material as THREE.PointsMaterial).size =
+              value;
+          }
+          setPointSize(value);
+        });
+    }
+  };
+
+  const getColorFromHeight = (normalizedZ: number): THREE.Color => {
+    const color = new THREE.Color();
+    color.setHSL((1.0 - normalizedZ) * 0.6, 1.0, 0.5);
+    return color;
+  };
+
+  const loadPointCloud = async () => {
+    try {
+      const arrayBuffer = await file.file.arrayBuffer();
+
+      if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+        onLog("Invalid PCD file: Empty or corrupted data.");
+        return;
+      }
+
+      pcdLoaderRef.current.load(
+        URL.createObjectURL(new Blob([arrayBuffer])),
+        (points) => {
+          if (pointCloudRef.current) {
+            sceneRef.current.remove(pointCloudRef.current);
+          }
+          pointCloudRef.current = points;
+
+          const allPositions = pointCloudRef.current.geometry.attributes.position
+            .array as Float32Array;
+          const positions = allPositions.filter((v) => !isNaN(v));
+
+          const boundingBox = new THREE.Box3();
+          const center = new THREE.Vector3();
+          boundingBox.setFromBufferAttribute(
+            new THREE.BufferAttribute(positions, 3)
+          );
+          boundingBox.getCenter(center);
+          const size = new THREE.Vector3();
+          boundingBox.getSize(size);
+          const maxDim = Math.max(size.x, size.y, size.z);
+          if (cameraRef.current && controlsRef.current) {
+            cameraRef.current.position.set(
+              center.x,
+              center.y,
+              center.z + maxDim * 2
+            );
+            cameraRef.current.lookAt(center);
+            controlsRef.current.target.copy(center);
+            controlsRef.current.update();
+          }
+
+          const colors = new Float32Array(positions.length);
+          let minZ = Infinity;
+          let maxZ = -Infinity;
+          for (let i = 2; i < positions.length; i += 3) {
+            const z = positions[i];
+            if (z < minZ) minZ = z;
+            if (z > maxZ) maxZ = z;
+          }
+
+          const rangeZ = maxZ - minZ;
+          for (let i = 0; i < positions.length; i += 3) {
+            const z = positions[i + 2];
+            const normalizedZ = rangeZ === 0 ? 0 : (z - minZ) / (maxZ - minZ);
+            const color = getColorFromHeight(normalizedZ);
+
+            colors[i] = color.r;
+            colors[i + 1] = color.g;
+            colors[i + 2] = color.b;
+          }
+
+          pointCloudRef.current.geometry.setAttribute(
+            "color",
+            new THREE.BufferAttribute(colors, 3)
+          );
+          sceneRef.current.add(pointCloudRef.current);
+
+          // Print PCD info
+          const fileSizeInBytes = arrayBuffer.byteLength;
+          const fileSizeInKB = Math.round(fileSizeInBytes / 1024);
+          const fileSizeInMB = fileSizeInBytes / 1024 / 1024;
+          const fileSizeInMBDisplay =
+            fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
+          const pcdInfo = `File name: ${file.file.name}, Total Points:${points.geometry.attributes.position.count}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB)`;
+          onLog(`Successfully loaded point cloud: ${pcdInfo}`);
+        },
+        (progress) => {
+          const percent = ((progress.loaded / progress.total) * 100).toFixed(2);
+          onLog(`Loading progress: ${percent}%`);
+        },
+        (error: any) => {
+          onLog(`Error loading point cloud: ${error.message}`);
+        }
+      );
+    } catch (error) {
+      onLog(
+        `Failed to load point cloud: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
   };
 
   const loadGeoJSON = async () => {
@@ -285,11 +438,10 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
   }
 
   return (
-    <PointCloudVisualiser points={getPoints(100000)} />
     // <div ref={containerRef} className="w-full h-full">
     //   <canvas ref={viewerRef} className="w-full h-full"></canvas>
     // </div>
-    // <div ref={threeContainerRef} className="w-full h-full" />
+    <div ref={threeContainerRef} className="w-full h-full" />
   );
 };
 
