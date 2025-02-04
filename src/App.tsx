@@ -13,19 +13,12 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import { UploadedFile, FileType, FileMeta, LogLevel } from "@/types";
 import LogViewer from "@/components/LogViewer";
 import { useToast } from "@/hooks/use-toast";
+import { ReadmeCard } from "@/components/ReadmeCard";
 
 export default function App() {
   const { toast } = useToast();
@@ -205,33 +198,7 @@ export default function App() {
                 {activeFile ? (
                   <FileVisualizer file={activeFile} onLog={addLog} />
                 ) : (
-                  <Card className="max-w-xl mx-auto">
-                    <CardHeader>
-                      <CardTitle className="text-center text-xl font-semibold">
-                        3D Point Cloud and Geo-Json Visualization Web
-                        Application
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-center text-gray-600 mb-4">
-                        This web application allows you to visualize{" "}
-                        <b>3D point cloud data</b> and <b>Geo-JSON files</b>.
-                        You can upload your own files or check out example
-                        datasets on GitHub.
-                      </CardDescription>
-                    </CardContent>
-                    <CardFooter className="flex justify-center">
-                      <a
-                        href="https://github.com/canyon/3d-web-viewer"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-blue-600 hover:underline"
-                      >
-                        <Github className="mr-2" />
-                        View Example Files on GitHub
-                      </a>
-                    </CardFooter>
-                  </Card>
+                  <ReadmeCard />
                 )}
               </div>
             </div>
