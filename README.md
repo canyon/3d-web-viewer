@@ -28,6 +28,7 @@ Below are screenshots of the application interface:
 
 - **Frontend Framework**: ReactJS
 - **Styling**: TailwindCSS
+- **3D Rendering**: Three.js
 - **File Formats Supported**:
   - Point Cloud Data (PCD)
   - GIS Data (GeoJSON)
@@ -57,6 +58,33 @@ Below are screenshots of the application interface:
 
 ### 5. **Expandable/Collapsible Sections**
 - Users can toggle the left-side file list and the log information section to maximize the 3D display area or focus on file management and logs.
+
+## Why Switch to Three.js?
+
+Initially, the project used **pcl.js** for point cloud visualization. However, when deploying on **Vercel**, an error occurred:
+
+```
+Uncaught (in promise) TypeError: __PCLCore__[n.name] is not a constructor
+    at new YB (index-C8DWNnQa.js:2576:7298)
+```
+
+The error was triggered by the following pcl.js code:
+
+```typescript
+constructor(n=qg, s) {
+    this._PT = n,
+    this._native = s ?? new __PCLCore__[`PointCloud${n.name}`],
+    this.manager = new hw(this._native)
+}
+```
+
+When trying to load a PCD file:
+
+```typescript
+const cloud = PCL.loadPCDData<PCL.PointXYZ>(arrayBuffer, PCL.PointXYZ);
+```
+
+Since **pcl.js** caused deployment issues, **Three.js** was chosen as a replacement due to its stability, flexibility, and wide support for 3D rendering.
 
 ## How to Use
 
@@ -88,4 +116,4 @@ To run the project locally, follow these steps:
 3. Start the development server:
    ```bash
    npm run dev
-   ```
+
