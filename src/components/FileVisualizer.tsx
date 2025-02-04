@@ -74,60 +74,59 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
     onLog(logMessage);
   };
 
+  // function getPoints(numberOfPoints: number) {
+  //   const points = Array(numberOfPoints);
+  //   for (let i = 0; i < numberOfPoints; i++) {
+  //     const point = Array(3);
+  //     if (i % 6 === 0) {
+  //       point[0] = Math.random() * 13 - 6.5;
+  //       point[1] = Math.random() * 5 - 2.5;
+  //       point[2] = -0.5;
+  //     } else if (i % 6 === 1) {
+  //       point[0] = Math.random() * 13 - 6.5;
+  //       point[1] = 2.5;
+  //       point[2] = Math.random() * 1 - 0.5;
+  //     } else if (i % 6 === 2) {
+  //       point[0] = Math.random() * 13 - 6.5;
+  //       point[1] = Math.random() * 5 - 2.5;
+  //       point[2] = 0.5;
+  //     } else if (i % 6 === 3) {
+  //       point[0] = Math.random() * 13 - 6.5;
+  //       point[1] = -2.5;
+  //       point[2] = Math.random() * 1 - 0.5;
+  //     } else if (i % 6 === 4) {
+  //       point[0] = 6.5;
+  //       point[1] = Math.random() * 5 - 2.5;
+  //       point[2] = Math.random() * 1 - 0.5;
+  //     } else if (i % 6 === 5) {
+  //       point[0] = -6.5;
+  //       point[1] = Math.random() * 5 - 2.5;
+  //       point[2] = Math.random() * 1 - 0.5;
+  //     }
+  //     points[i] = point;
+  //   }
+  //   return points;
+  // }
 
-  function getPoints(numberOfPoints: number) {
-    const points = Array(numberOfPoints);
-    for (let i = 0; i < numberOfPoints; i++) {
-      const point = Array(3);
-      if (i % 6 === 0) {
-        point[0] = Math.random() * 13 - 6.5;
-        point[1] = Math.random() * 5 - 2.5;
-        point[2] = -0.5;
-      } else if (i % 6 === 1) {
-        point[0] = Math.random() * 13 - 6.5;
-        point[1] = 2.5;
-        point[2] = Math.random() * 1 - 0.5;
-      } else if (i % 6 === 2) {
-        point[0] = Math.random() * 13 - 6.5;
-        point[1] = Math.random() * 5 - 2.5;
-        point[2] = 0.5;
-      } else if (i % 6 === 3) {
-        point[0] = Math.random() * 13 - 6.5;
-        point[1] = -2.5;
-        point[2] = Math.random() * 1 - 0.5;
-      } else if (i % 6 === 4) {
-        point[0] = 6.5;
-        point[1] = Math.random() * 5 - 2.5;
-        point[2] = Math.random() * 1 - 0.5;
-      } else if (i % 6 === 5) {
-        point[0] = -6.5;
-        point[1] = Math.random() * 5 - 2.5;
-        point[2] = Math.random() * 1 - 0.5;
-      }
-      points[i] = point;
-    }
-    return points;
-  }
-
-  function convertToPCDArrayBuffer(points: number[][]) {
-    const headerLines = [
-      "# .PCD v.7 - Point Cloud Data file format",
-      "VERSION .7",
-      "FIELDS x y z",
-      "SIZE 4 4 4",
-      "TYPE F F F",
-      "COUNT 1 1 1",
-      `WIDTH ${points.length}`,
-      "HEIGHT 1",
-      "VIEWPOINT 0 0 0 1 0 0 0",
-      `POINTS ${points.length}`,
-      "DATA ascii",
-    ];
-    const bodyLines = points.map((point) => point.join(" "));
-    const pcdString = headerLines.join("\n") + "\n" + bodyLines.join("\n");
-    const encoder = new TextEncoder();
-    return encoder.encode(pcdString);
-  }
+  // function convertToPCDArrayBuffer(points: number[][]) {
+  //   const headerLines = [
+  //     "# .PCD v.7 - Point Cloud Data file format",
+  //     "VERSION .7",
+  //     "FIELDS x y z",
+  //     "SIZE 4 4 4",
+  //     "TYPE F F F",
+  //     "COUNT 1 1 1",
+  //     `WIDTH ${points.length}`,
+  //     "HEIGHT 1",
+  //     "VIEWPOINT 0 0 0 1 0 0 0",
+  //     `POINTS ${points.length}`,
+  //     "DATA ascii",
+  //   ];
+  //   const bodyLines = points.map((point) => point.join(" "));
+  //   const pcdString = headerLines.join("\n") + "\n" + bodyLines.join("\n");
+  //   const encoder = new TextEncoder();
+  //   return encoder.encode(pcdString);
+  // }
 
   const threeContainerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef(new THREE.Scene());
@@ -138,7 +137,6 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
   const pcdLoaderRef = useRef(new PCDLoader());
   const animationFrameId = useRef<number | null>(null);
   const pointCloudRef = useRef<THREE.Points | null>(null);
-  const [pointSize, setPointSize] = useState(1.0);
   const initDisplay = () => {
     if (rendererRef.current) {
       rendererRef.current.dispose();
