@@ -14,11 +14,12 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { ThemeProvider } from "@/components/theme-provider";
-
-import { UploadedFile, FileType, FileMeta, LogLevel } from "@/types";
 import LogViewer from "@/components/LogViewer";
 import { useToast } from "@/hooks/use-toast";
 import { ReadmeCard } from "@/components/ReadmeCard";
+
+import { UploadedFile, FileType, FileMeta, LogLevel } from "@/types";
+import { getByteKBMBMsg } from "@/lib/utils";
 
 export default function App() {
   const { toast } = useToast();
@@ -59,7 +60,7 @@ export default function App() {
   }, []);
 
   const getFileType = (fileName: string): FileType => {
-    if (/\.(pcd|xyz)$/i.test(fileName)) return FileType.POINT_CLOUD;
+    if (/\.(pcd|xyz|txt|ply)$/i.test(fileName)) return FileType.POINT_CLOUD;
     if (/\.(geojson|json)$/i.test(fileName)) return FileType.GIS;
     return FileType.UNKNOWN;
   };
@@ -92,7 +93,7 @@ export default function App() {
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "application/json": [".geojson", ".json"],
-      "text/plain": [".xyz", ".pcd"],
+      "text/plain": [".xyz", ".pcd", ".txt", ".ply"],
     },
     onDrop: async (acceptedFiles) => {
       const newFiles = await Promise.all(
@@ -105,6 +106,7 @@ export default function App() {
             type: fileType,
             meta,
             layers: [],
+            file_bytes: file.size,
           };
         })
       );
@@ -113,7 +115,7 @@ export default function App() {
       if (newFiles.length > 0) {
         setActiveFileId(newFiles[0].id);
         const msg = `Uploaded file: ${newFiles
-          .map((f) => f.file.name)
+          .map((f) => [f.file.name, getByteKBMBMsg(f.file_bytes)])
           .join(", ")}`;
         addLog(formattedLogMsg(msg, LogLevel.SUCCESS));
       }

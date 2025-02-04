@@ -11,6 +11,7 @@ export interface UploadedFile {
   type: FileType;
   meta: FileMeta;
   layers: any[];
+  file_bytes: number;
 }
 
 export enum FileType {

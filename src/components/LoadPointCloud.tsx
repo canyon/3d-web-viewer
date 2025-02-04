@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { LogLevel, FileVisualizerProps } from "@/types";
+import { getByteKBMBMsg } from "@/lib/utils";
+
 import * as THREE from "three";
 import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -244,12 +246,10 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
           // Print PCD info
           const endTime = performance.now();
           const loadDuration = ((endTime - startTime) / 1000).toFixed(2);
-          const fileSizeInBytes = arrayBuffer.byteLength;
-          const fileSizeInKB = Math.round(fileSizeInBytes / 1024);
-          const fileSizeInMB = fileSizeInBytes / 1024 / 1024;
-          const fileSizeInMBDisplay =
-            fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
-          const pcdInfo = `File name: ${file.file.name}, Total Points: ${points.geometry.attributes.position.count}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB), Load Time: ${loadDuration} seconds`;
+
+          const pcdInfo = `File name: ${file.file.name}, Total Points: ${
+            points.geometry.attributes.position.count
+          }, ${getByteKBMBMsg(arrayBuffer.byteLength)}, Load Time: ${loadDuration} seconds`;
           const msg = `Successfully loaded point cloud: ${pcdInfo}`;
           toastAndLog(msg, LogLevel.SUCCESS);
         },

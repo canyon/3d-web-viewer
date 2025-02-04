@@ -1,6 +1,7 @@
 import { FileType, FileVisualizerProps } from "@/types";
 import { LoadPointCloud } from "@/components/LoadPointCloud";
 import { LoadGeoJSON } from "@/components/LoadGeoJSON";
+import { ReadmeCard } from "@/components/ReadmeCard";
 
 const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
   switch (file.type) {
@@ -11,7 +12,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       return <LoadGeoJSON file={file} onLog={onLog} />;
 
     default:
-      return <div className="w-full h-full" />;
+      return <ReadmeCard />;
   }
 };
 
