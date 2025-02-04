@@ -1,11 +1,13 @@
-// @ts-nocheck
 import { useEffect, useRef, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { UploadedFile, FileType } from "@/types";
-import * as PCL from "pcl.js";
-import PointCloudViewer from "pcl.js/PointCloudViewer";
+import { UploadedFile, FileType, LogLevel } from "@/types";
+import * as THREE from "three";
+import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { GUI } from "three/examples/jsm/libs/lil-gui.module.min.js";
 
 interface FileVisualizerProps {
   file: UploadedFile;
@@ -25,6 +27,7 @@ interface GeoJSONData {
 }
 
 const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
+  const { toast } = useToast();
   const [geoJSONData, setGeoJSONData] = useState<GeoJSONData | null>(null);
   const [viewState, setViewState] = useState({
     longitude: -100,
@@ -36,114 +39,327 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
 
   useEffect(() => {
     if (file.type === FileType.POINT_CLOUD) {
+      initThreeJS();
       loadPointCloud();
     } else if (file.type === FileType.GIS) {
       loadGeoJSON();
     }
   }, [file]);
 
-  function getPoints(numberOfPoints: number) {
-    const points = Array(numberOfPoints);
-    for (let i = 0; i < numberOfPoints; i++) {
-      const point = Array(3);
-      if (i % 6 === 0) {
-        point[0] = Math.random() * 13 - 6.5;
-        point[1] = Math.random() * 5 - 2.5;
-        point[2] = -0.5;
-      } else if (i % 6 === 1) {
-        point[0] = Math.random() * 13 - 6.5;
-        point[1] = 2.5;
-        point[2] = Math.random() * 1 - 0.5;
-      } else if (i % 6 === 2) {
-        point[0] = Math.random() * 13 - 6.5;
-        point[1] = Math.random() * 5 - 2.5;
-        point[2] = 0.5;
-      } else if (i % 6 === 3) {
-        point[0] = Math.random() * 13 - 6.5;
-        point[1] = -2.5;
-        point[2] = Math.random() * 1 - 0.5;
-      } else if (i % 6 === 4) {
-        point[0] = 6.5;
-        point[1] = Math.random() * 5 - 2.5;
-        point[2] = Math.random() * 1 - 0.5;
-      } else if (i % 6 === 5) {
-        point[0] = -6.5;
-        point[1] = Math.random() * 5 - 2.5;
-        point[2] = Math.random() * 1 - 0.5;
-      }
-      points[i] = point;
+  const toastAndLog = (message: string, level: LogLevel) => {
+    const now = new Date();
+    const formattedLogTime = now.toLocaleString("en", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+
+    let variant: "default" | "destructive" = "default";
+    if (level === LogLevel.ERROR) variant = "destructive";
+    else if (level === LogLevel.WARNING) variant = "destructive";
+    else if (level === LogLevel.SUCCESS) variant = "default";
+
+    const logMessage = `[${formattedLogTime}] [${level}] ${message}`;
+
+    toast({
+      variant,
+      title: `[${level}] ${message}`,
+      description: formattedLogTime,
+    });
+    onLog(logMessage);
+  };
+
+  // function getPoints(numberOfPoints: number) {
+  //   const points = Array(numberOfPoints);
+  //   for (let i = 0; i < numberOfPoints; i++) {
+  //     const point = Array(3);
+  //     if (i % 6 === 0) {
+  //       point[0] = Math.random() * 13 - 6.5;
+  //       point[1] = Math.random() * 5 - 2.5;
+  //       point[2] = -0.5;
+  //     } else if (i % 6 === 1) {
+  //       point[0] = Math.random() * 13 - 6.5;
+  //       point[1] = 2.5;
+  //       point[2] = Math.random() * 1 - 0.5;
+  //     } else if (i % 6 === 2) {
+  //       point[0] = Math.random() * 13 - 6.5;
+  //       point[1] = Math.random() * 5 - 2.5;
+  //       point[2] = 0.5;
+  //     } else if (i % 6 === 3) {
+  //       point[0] = Math.random() * 13 - 6.5;
+  //       point[1] = -2.5;
+  //       point[2] = Math.random() * 1 - 0.5;
+  //     } else if (i % 6 === 4) {
+  //       point[0] = 6.5;
+  //       point[1] = Math.random() * 5 - 2.5;
+  //       point[2] = Math.random() * 1 - 0.5;
+  //     } else if (i % 6 === 5) {
+  //       point[0] = -6.5;
+  //       point[1] = Math.random() * 5 - 2.5;
+  //       point[2] = Math.random() * 1 - 0.5;
+  //     }
+  //     points[i] = point;
+  //   }
+  //   return points;
+  // }
+
+  // function convertToPCDArrayBuffer(points: number[][]) {
+  //   const headerLines = [
+  //     "# .PCD v.7 - Point Cloud Data file format",
+  //     "VERSION .7",
+  //     "FIELDS x y z",
+  //     "SIZE 4 4 4",
+  //     "TYPE F F F",
+  //     "COUNT 1 1 1",
+  //     `WIDTH ${points.length}`,
+  //     "HEIGHT 1",
+  //     "VIEWPOINT 0 0 0 1 0 0 0",
+  //     `POINTS ${points.length}`,
+  //     "DATA ascii",
+  //   ];
+  //   const bodyLines = points.map((point) => point.join(" "));
+  //   const pcdString = headerLines.join("\n") + "\n" + bodyLines.join("\n");
+  //   const encoder = new TextEncoder();
+  //   return encoder.encode(pcdString);
+  // }
+
+  const threeContainerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef(new THREE.Scene());
+  const pcdGUI = useRef(new GUI());
+  const rendererRef = useRef<THREE.WebGLRenderer>();
+  const cameraRef = useRef<THREE.PerspectiveCamera>();
+  const controlsRef = useRef<OrbitControls | null>(null);
+  const pcdLoaderRef = useRef(new PCDLoader());
+  const animationFrameId = useRef<number | null>(null);
+  const pointCloudRef = useRef<THREE.Points | null>(null);
+  const initDisplay = () => {
+    if (rendererRef.current) {
+      rendererRef.current.dispose();
+      rendererRef.current = undefined;
     }
-    return points;
-  }
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+    }
+    if (threeContainerRef.current) {
+      threeContainerRef.current.innerHTML = "";
+    }
+    if (pointCloudRef.current) {
+      sceneRef.current.remove(pointCloudRef.current);
+    }
+    window.removeEventListener("resize", handleResize);
+  };
 
-  function convertToPCDArrayBuffer(points: number[]) {
-    const headerLines = [
-      "# .PCD v.7 - Point Cloud Data file format",
-      "VERSION .7",
-      "FIELDS x y z",
-      "SIZE 4 4 4",
-      "TYPE F F F",
-      "COUNT 1 1 1",
-      `WIDTH ${points.length}`,
-      "HEIGHT 1",
-      "VIEWPOINT 0 0 0 1 0 0 0",
-      `POINTS ${points.length}`,
-      "DATA ascii",
-    ];
-    const bodyLines = points.map((point) => point.join(" "));
-    const pcdString = headerLines.join("\n") + "\n" + bodyLines.join("\n");
-    const encoder = new TextEncoder();
-    return encoder.encode(pcdString);
-  }
+  const initThreeJS = () => {
+    if (!threeContainerRef.current) return;
+    initDisplay();
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const viewerRef = useRef<HTMLCanvasElement>(null);
-  const PointCloudViewerRef = useRef<PointCloudViewer>(null);
+    const width = threeContainerRef.current.clientWidth;
+    const height = threeContainerRef.current.clientHeight;
+
+    cameraRef.current = new THREE.PerspectiveCamera(
+      75,
+      width / height,
+      0.1,
+      1000
+    );
+    cameraRef.current.position.z = 5;
+    sceneRef.current.add(cameraRef.current);
+
+    rendererRef.current = new THREE.WebGLRenderer({ antialias: true });
+    rendererRef.current.setPixelRatio(window.devicePixelRatio);
+    rendererRef.current.setSize(width, height);
+    threeContainerRef.current.appendChild(rendererRef.current.domElement);
+
+    const axisHelper = new THREE.AxesHelper(1);
+    sceneRef.current.add(axisHelper);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    sceneRef.current.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(0, 1, 0);
+    sceneRef.current.add(directionalLight);
+
+    controlsRef.current = new OrbitControls(
+      cameraRef.current,
+      rendererRef.current.domElement
+    );
+    controlsRef.current.screenSpacePanning = true;
+    controlsRef.current.addEventListener("change", animate);
+  };
+
+  const handleResize = () => {
+    if (
+      !rendererRef.current ||
+      !cameraRef.current ||
+      !threeContainerRef.current
+    )
+      return;
+
+    const width = threeContainerRef.current.clientWidth;
+    const height = threeContainerRef.current.clientHeight;
+
+    cameraRef.current.aspect = width / height;
+    cameraRef.current.updateProjectionMatrix();
+    rendererRef.current.setSize(width, height);
+    animate();
+  };
+
+  const animate = () => {
+    if (!rendererRef.current || !cameraRef.current) return;
+
+    rendererRef.current.render(sceneRef.current, cameraRef.current);
+  };
+
+  const getColorFromHeight = (normalizedZ: number): THREE.Color => {
+    const color = new THREE.Color();
+    color.setHSL((1.0 - normalizedZ) * 0.6, 1.0, 0.5);
+    return color;
+  };
+
   const loadPointCloud = async () => {
     try {
-      await PCL.init({
-        url: `https://cdn.jsdelivr.net/npm/pcl.js/dist/pcl-core.wasm`,
-      });
       const arrayBuffer = await file.file.arrayBuffer();
-      // const arrayBuffer = convertToPCDArrayBuffer(getPoints(500000));
 
-      const cloud = PCL.loadPCDData(arrayBuffer, PCL.PointXYZ);
+      if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+        const msg = "Invalid PCD file: Empty or corrupted data.";
+        toastAndLog(msg, LogLevel.ERROR);
+        return;
+      }
 
-      // Print PCD info
-      const fileSizeInBytes = arrayBuffer.byteLength;
-      const fileSizeInKB = Math.round(fileSizeInBytes / 1024);
-      const fileSizeInMB = fileSizeInBytes / 1024 / 1024;
-      const fileSizeInMBDisplay =
-        fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
-      const pcdInfo =  `File name: ${file.file.name}, Total Points:${cloud.size}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB)`
-      console.log(pcdInfo);
+      pcdLoaderRef.current.load(
+        URL.createObjectURL(new Blob([arrayBuffer])),
+        (points) => {
+          if (pointCloudRef.current) {
+            sceneRef.current.remove(pointCloudRef.current);
+          }
+          // Track start time for loading
+          const startTime = performance.now();
 
-      PointCloudViewerRef.current = new PointCloudViewer(
-        viewerRef.current,
-        containerRef.current.clientWidth,
-        containerRef.current.clientHeight
+          pointCloudRef.current = points;
+
+          if (pcdGUI.current) {
+            pcdGUI.current.destroy();
+          }
+          pcdGUI.current = new GUI();
+          const pointFolder = pcdGUI.current.addFolder("Point Settings");
+          const settings = {
+            size:
+              (pointCloudRef.current.material as THREE.PointsMaterial).size ||
+              0.005,
+          };
+          pointFolder
+            .add(settings, "size", 0.001, 0.1)
+            .name("Size")
+            .onChange((value) => {
+              if (pointCloudRef.current) {
+                (pointCloudRef.current.material as THREE.PointsMaterial).size =
+                  value;
+                animate();
+              }
+            });
+          const materialParams = {
+            color: "#ffffff",
+          };
+          pointFolder
+            .addColor(materialParams, "color")
+            .name("Color")
+            .onChange((value) => {
+              if (pointCloudRef.current) {
+                (
+                  pointCloudRef.current.material as THREE.PointsMaterial
+                ).color.setHex(parseInt(value.replace("#", "0x")));
+                animate();
+              }
+            });
+
+          pointFolder.open();
+
+          const allPositions = pointCloudRef.current.geometry.attributes
+            .position.array as Float32Array;
+          const positions = allPositions.filter((v) => !isNaN(v));
+
+          const boundingBox = new THREE.Box3();
+          const center = new THREE.Vector3();
+          boundingBox.setFromBufferAttribute(
+            new THREE.BufferAttribute(positions, 3)
+          );
+          boundingBox.getCenter(center);
+          const size = new THREE.Vector3();
+          boundingBox.getSize(size);
+          const maxDim = Math.max(size.x, size.y, size.z);
+          if (cameraRef.current && controlsRef.current) {
+            cameraRef.current.position.set(
+              center.x,
+              center.y,
+              center.z + maxDim * 2
+            );
+            cameraRef.current.lookAt(center);
+            controlsRef.current.target.copy(center);
+            controlsRef.current.update();
+          }
+
+          const colors = new Float32Array(positions.length);
+          let minZ = Infinity;
+          let maxZ = -Infinity;
+          for (let i = 2; i < positions.length; i += 3) {
+            const z = positions[i];
+            if (z < minZ) minZ = z;
+            if (z > maxZ) maxZ = z;
+          }
+
+          const rangeZ = maxZ - minZ;
+          for (let i = 0; i < positions.length; i += 3) {
+            const z = positions[i + 2];
+            const normalizedZ = rangeZ === 0 ? 0 : (z - minZ) / (maxZ - minZ);
+            const color = getColorFromHeight(normalizedZ);
+
+            colors[i] = color.r;
+            colors[i + 1] = color.g;
+            colors[i + 2] = color.b;
+          }
+
+          pointCloudRef.current.geometry.setAttribute(
+            "color",
+            new THREE.BufferAttribute(colors, 3)
+          );
+          sceneRef.current.add(pointCloudRef.current);
+
+          animate();
+
+          // Print PCD info
+          const endTime = performance.now();
+          const loadDuration = ((endTime - startTime) / 1000).toFixed(2);
+          const fileSizeInBytes = arrayBuffer.byteLength;
+          const fileSizeInKB = Math.round(fileSizeInBytes / 1024);
+          const fileSizeInMB = fileSizeInBytes / 1024 / 1024;
+          const fileSizeInMBDisplay =
+            fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
+          const pcdInfo = `File name: ${file.file.name}, Total Points: ${points.geometry.attributes.position.count}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB), Load Time: ${loadDuration} seconds`;
+          const msg = `Successfully loaded point cloud: ${pcdInfo}`;
+          toastAndLog(msg, LogLevel.SUCCESS);
+        },
+        (progress) => {
+          const percent = ((progress.loaded / progress.total) * 100).toFixed(2);
+          const msg = `Loading progress: ${percent}%`;
+          toastAndLog(msg, LogLevel.INFO);
+        },
+        (error: any) => {
+          const msg = `Error loading point cloud: ${error.message}`;
+          toastAndLog(msg, LogLevel.ERROR);
+        }
       );
 
-      PointCloudViewerRef.current.addPointCloud(cloud);
-      // PointCloudViewerRef.current.setPointCloudProperties({ color: "#F00" });
-      PointCloudViewerRef.current.setAxesHelper({ visible: true, size: 1 });
-      PointCloudViewerRef.current.setCameraParameters({
-        position: { x: 0, y: 0, z: 1.5 },
-      });
-      window.addEventListener("resize", () => {
-        PointCloudViewerRef.current.setSize(
-          containerRef.current.clientWidth,
-          containerRef.current.clientHeight
-        );
-      });
-
-      onLog(`Successfully loaded point cloud: ${pcdInfo}`);
+      window.addEventListener("resize", handleResize);
+      animate();
     } catch (error) {
-      onLog(
-        `Failed to load point cloud: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      const msg = `Failed to load point cloud: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`;
+      toastAndLog(msg, LogLevel.ERROR);
     }
   };
 
@@ -187,13 +403,13 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
         }
       }
 
-      onLog(`Successfully loaded GeoJSON: ${file.file.name}`);
+      const msg = `Successfully loaded GeoJSON: ${file.file.name}`;
+      toastAndLog(msg, LogLevel.SUCCESS);
     } catch (error) {
-      onLog(
-        `Failed to load GeoJSON: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      const msg = `Failed to load GeoJSON: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`;
+      toastAndLog(msg, LogLevel.ERROR);
     }
   };
 
@@ -270,11 +486,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
     );
   }
 
-  return (
-    <div ref={containerRef} className="w-full h-full">
-      <canvas ref={viewerRef} className="w-full h-full"></canvas>
-    </div>
-  );
+  return <div ref={threeContainerRef} className="w-full h-full" />;
 };
 
 export default FileVisualizer;
