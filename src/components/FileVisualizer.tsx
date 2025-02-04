@@ -1,11 +1,10 @@
-// @ts-nocheck
+
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { UploadedFile, FileType, LogLevel } from "@/types";
-import {formattedLogMsg} from "@/lib/utils";
 import * as THREE from "three";
 import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -248,14 +247,14 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
           pcdGUI.current = new GUI();
           const pointFolder = pcdGUI.current.addFolder('Point Settings');
           const settings = {
-            size: pointCloudRef.current.material.size || 0.005
+            size: (pointCloudRef.current.material as THREE.PointsMaterial).size || 0.005
           };
           pointFolder
             .add(settings, 'size', 0.001, 0.1)
             .name('Size')
             .onChange((value) => {
               if (pointCloudRef.current) {
-                pointCloudRef.current.material.size = value;
+                (pointCloudRef.current.material as THREE.PointsMaterial).size = value;
                 animate();
               }
             });
@@ -267,7 +266,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
             .name('Color')
             .onChange((value) => {
               if (pointCloudRef.current) {
-                pointCloudRef.current.material.color.setHex(parseInt(value.replace('#', '0x')));
+                (pointCloudRef.current.material as THREE.PointsMaterial).color.setHex(parseInt(value.replace('#', '0x')));
                 animate();
               }
             });
