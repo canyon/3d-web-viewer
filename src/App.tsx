@@ -13,22 +13,45 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { ThemeProvider } from "@/components/theme-provider";
 
-import { UploadedFile, FileType, FileMeta } from "@/types";
+import { UploadedFile, FileType, FileMeta, LogLevel } from "@/types";
+import LogViewer from "@/components/LogViewer";
+import { useToast } from "@/hooks/use-toast";
 
 export default function App() {
+  const { toast } = useToast();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [logs, setLogs] = useState<string[]>([]);
   const [activeFileId, setActiveFileId] = useState<string>();
+
+  const formattedLogMsg = (message: string, level: LogLevel) => {
+    const now = new Date();
+    const formattedLogTime = now.toLocaleString("en", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+
+    let variant: "default" | "destructive" = "default";
+    if (level === LogLevel.ERROR) variant = "destructive";
+    else if (level === LogLevel.WARNING) variant = "destructive";
+    else if (level === LogLevel.SUCCESS) variant = "default";
+
+    const logMessage = `[${formattedLogTime}] [${level}] ${message}`;
+
+    toast({
+      variant,
+      title: `[${level}] ${message}`,
+      description: formattedLogTime,
+    });
+
+    return logMessage;
+  };
 
   const addLog = useCallback((message: string) => {
     setLogs((prev) => [...prev, message]);
@@ -88,7 +111,10 @@ export default function App() {
       setFiles((prev) => [...prev, ...newFiles]);
       if (newFiles.length > 0) {
         setActiveFileId(newFiles[0].id);
-        addLog(`Uploaded file: ${newFiles.map((f) => f.file.name).join(", ")}`);
+        const msg = `Uploaded file: ${newFiles
+          .map((f) => f.file.name)
+          .join(", ")}`;
+        addLog(formattedLogMsg(msg, LogLevel.SUCCESS));
       }
     },
   });
@@ -183,28 +209,9 @@ export default function App() {
               <ModeToggle />
             </div>
             <div className="h-full flex flex-col p-4">
-              <h2 className="text-lg font-semibold mb-4">Logs</h2>
+              <h2 className="text-lg font-semibold mb-4">System Logs</h2>
               <ScrollArea className="flex-1">
-                {logs.map((log, index) => (
-                  <div
-                    key={index}
-                    className="text-sm py-1"
-                  >
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>
-                        <div className="text-sm"><p>{log}</p></div></CardTitle>
-                        {/* <CardDescription></CardDescription> */}
-                      </CardHeader>
-                      {/* <CardContent>
-                      </CardContent> */}
-                      {/* <CardFooter>
-                        <p>Card Footer</p>
-                      </CardFooter> */}
-                    </Card>
-                    {/* {log} */}
-                  </div>
-                ))}
+                <LogViewer logs={logs} />
               </ScrollArea>
             </div>
           </ResizablePanel>

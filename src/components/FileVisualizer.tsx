@@ -4,7 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { UploadedFile, FileType } from "@/types";
+import { UploadedFile, FileType, LogLevel } from "@/types";
+import {formattedLogMsg} from "@/lib/utils";
 import * as THREE from "three";
 import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -47,21 +48,33 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
     }
   }, [file]);
 
-  const toastAndLog = (title: string, error: boolean) => {
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: title,
-        // description: "Friday, February 10, 2023 at 5:57 PM",
-      });
-    } else {
-      toast({
-        title: title,
-        // description: "Friday, February 10, 2023 at 5:57 PM",
-      });
-    }
-    onLog(title);
+  const toastAndLog = (message: string, level: LogLevel) => {
+    const now = new Date();
+    const formattedLogTime = now.toLocaleString("en", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+
+    let variant: "default" | "destructive" = "default";
+    if (level === LogLevel.ERROR) variant = "destructive";
+    else if (level === LogLevel.WARNING) variant = "destructive";
+    else if (level === LogLevel.SUCCESS) variant = "default";
+
+    const logMessage = `[${formattedLogTime}] [${level}] ${message}`;
+
+    toast({
+      variant,
+      title: `[${level}] ${message}`,
+      description: formattedLogTime,
+    });
+    onLog(logMessage);
   };
+
 
   function getPoints(numberOfPoints: number) {
     const points = Array(numberOfPoints);
@@ -217,7 +230,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
 
       if (!arrayBuffer || arrayBuffer.byteLength === 0) {
         const msg = "Invalid PCD file: Empty or corrupted data.";
-        toastAndLog(msg, true);
+        toastAndLog(msg, LogLevel.ERROR);
         return;
       }
 
@@ -322,16 +335,16 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
             fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
           const pcdInfo = `File name: ${file.file.name}, Total Points: ${points.geometry.attributes.position.count}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB)`;
           const msg = `Successfully loaded point cloud: ${pcdInfo}`;
-          toastAndLog(msg, false);
+          toastAndLog(msg, LogLevel.SUCCESS);
         },
         (progress) => {
           const percent = ((progress.loaded / progress.total) * 100).toFixed(2);
           const msg = `Loading progress: ${percent}%`;
-          toastAndLog(msg, false);
+          toastAndLog(msg, LogLevel.INFO);
         },
         (error: any) => {
           const msg = `Error loading point cloud: ${error.message}`;
-          toastAndLog(msg, true);
+          toastAndLog(msg, LogLevel.ERROR);
         }
       );
 
@@ -341,7 +354,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       const msg = `Failed to load point cloud: ${
         error instanceof Error ? error.message : "Unknown error"
       }`;
-      toastAndLog(msg, true);
+      toastAndLog(msg, LogLevel.ERROR);
     }
   };
 
@@ -386,12 +399,12 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       }
 
       const msg = `Successfully loaded GeoJSON: ${file.file.name}`;
-      toastAndLog(msg, false);
+      toastAndLog(msg, LogLevel.SUCCESS);
     } catch (error) {
       const msg = `Failed to load GeoJSON: ${
           error instanceof Error ? error.message : "Unknown error"
         }`;
-      toastAndLog(msg, true);
+      toastAndLog(msg, LogLevel.ERROR);
     }
   };
 
