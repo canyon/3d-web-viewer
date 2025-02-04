@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
@@ -28,7 +27,7 @@ interface GeoJSONData {
 }
 
 const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const [geoJSONData, setGeoJSONData] = useState<GeoJSONData | null>(null);
   const [viewState, setViewState] = useState({
     longitude: -100,
@@ -237,40 +236,47 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
           if (pointCloudRef.current) {
             sceneRef.current.remove(pointCloudRef.current);
           }
+          // Track start time for loading
+          const startTime = performance.now();
+
           pointCloudRef.current = points;
 
           if (pcdGUI.current) {
             pcdGUI.current.destroy();
           }
           pcdGUI.current = new GUI();
-          const pointFolder = pcdGUI.current.addFolder('Point Settings');
+          const pointFolder = pcdGUI.current.addFolder("Point Settings");
           const settings = {
-            size: (pointCloudRef.current.material as THREE.PointsMaterial).size || 0.005
+            size:
+              (pointCloudRef.current.material as THREE.PointsMaterial).size ||
+              0.005,
           };
           pointFolder
-            .add(settings, 'size', 0.001, 0.1)
-            .name('Size')
+            .add(settings, "size", 0.001, 0.1)
+            .name("Size")
             .onChange((value) => {
               if (pointCloudRef.current) {
-                (pointCloudRef.current.material as THREE.PointsMaterial).size = value;
+                (pointCloudRef.current.material as THREE.PointsMaterial).size =
+                  value;
                 animate();
               }
             });
           const materialParams = {
-            color: '#ffffff'
+            color: "#ffffff",
           };
           pointFolder
-            .addColor(materialParams, 'color')
-            .name('Color')
+            .addColor(materialParams, "color")
+            .name("Color")
             .onChange((value) => {
               if (pointCloudRef.current) {
-                (pointCloudRef.current.material as THREE.PointsMaterial).color.setHex(parseInt(value.replace('#', '0x')));
+                (
+                  pointCloudRef.current.material as THREE.PointsMaterial
+                ).color.setHex(parseInt(value.replace("#", "0x")));
                 animate();
               }
             });
 
           pointFolder.open();
-
 
           const allPositions = pointCloudRef.current.geometry.attributes
             .position.array as Float32Array;
@@ -325,12 +331,14 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
           animate();
 
           // Print PCD info
+          const endTime = performance.now();
+          const loadDuration = ((endTime - startTime) / 1000).toFixed(2);
           const fileSizeInBytes = arrayBuffer.byteLength;
           const fileSizeInKB = Math.round(fileSizeInBytes / 1024);
           const fileSizeInMB = fileSizeInBytes / 1024 / 1024;
           const fileSizeInMBDisplay =
             fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
-          const pcdInfo = `File name: ${file.file.name}, Total Points: ${points.geometry.attributes.position.count}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB)`;
+          const pcdInfo = `File name: ${file.file.name}, Total Points: ${points.geometry.attributes.position.count}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB), Load Time: ${loadDuration} seconds`;
           const msg = `Successfully loaded point cloud: ${pcdInfo}`;
           toastAndLog(msg, LogLevel.SUCCESS);
         },
@@ -399,8 +407,8 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       toastAndLog(msg, LogLevel.SUCCESS);
     } catch (error) {
       const msg = `Failed to load GeoJSON: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`;
+        error instanceof Error ? error.message : "Unknown error"
+      }`;
       toastAndLog(msg, LogLevel.ERROR);
     }
   };
@@ -478,9 +486,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
     );
   }
 
-  return (
-    <div ref={threeContainerRef} className="w-full h-full" />
-  );
+  return <div ref={threeContainerRef} className="w-full h-full" />;
 };
 
 export default FileVisualizer;
