@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, Github } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { useDropzone } from "react-dropzone";
 import { useState, useCallback } from "react";
@@ -14,10 +14,12 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { ThemeProvider } from "@/components/theme-provider";
-
-import { UploadedFile, FileType, FileMeta, LogLevel } from "@/types";
 import LogViewer from "@/components/LogViewer";
 import { useToast } from "@/hooks/use-toast";
+import { ReadmeCard } from "@/components/ReadmeCard";
+
+import { UploadedFile, FileType, FileMeta, LogLevel } from "@/types";
+import { getByteKBMBMsg } from "@/lib/utils";
 
 export default function App() {
   const { toast } = useToast();
@@ -58,7 +60,7 @@ export default function App() {
   }, []);
 
   const getFileType = (fileName: string): FileType => {
-    if (/\.(pcd|xyz)$/i.test(fileName)) return FileType.POINT_CLOUD;
+    if (/\.(pcd|xyz|txt|ply)$/i.test(fileName)) return FileType.POINT_CLOUD;
     if (/\.(geojson|json)$/i.test(fileName)) return FileType.GIS;
     return FileType.UNKNOWN;
   };
@@ -91,7 +93,7 @@ export default function App() {
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "application/json": [".geojson", ".json"],
-      "text/plain": [".xyz", ".pcd"],
+      "text/plain": [".xyz", ".pcd", ".txt", ".ply"],
     },
     onDrop: async (acceptedFiles) => {
       const newFiles = await Promise.all(
@@ -104,6 +106,7 @@ export default function App() {
             type: fileType,
             meta,
             layers: [],
+            file_bytes: file.size,
           };
         })
       );
@@ -112,7 +115,7 @@ export default function App() {
       if (newFiles.length > 0) {
         setActiveFileId(newFiles[0].id);
         const msg = `Uploaded file: ${newFiles
-          .map((f) => f.file.name)
+          .map((f) => [f.file.name, getByteKBMBMsg(f.file_bytes)])
           .join(", ")}`;
         addLog(formattedLogMsg(msg, LogLevel.SUCCESS));
       }
@@ -193,9 +196,11 @@ export default function App() {
                   <ScrollBar orientation="horizontal" />
                 </ScrollArea>
               </Tabs>
-              <div className="w-full flex-1 relative">
-                {activeFile && (
+              <div className="w-full  h-screen  flex items-center justify-center ">
+                {activeFile ? (
                   <FileVisualizer file={activeFile} onLog={addLog} />
+                ) : (
+                  <ReadmeCard />
                 )}
               </div>
             </div>
@@ -205,8 +210,23 @@ export default function App() {
 
           {/* Right Panel - Logs */}
           <ResizablePanel defaultSize={15} minSize={15} maxSize={30}>
-            <div className=" w-full flex p-2">
+            <div className=" w-full flex p-2 space-x-2">
               <ModeToggle />
+
+              <Button asChild>
+                <a
+                  href="https://github.com/canyon/3d-web-viewer"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Github />
+                  Github
+                </a>
+              </Button>
+              {/* <Button variant="outline" size="icon">
+                <a href="https://github.com/canyon/3d-web-viewer" target="_blank">
+                <Github /></a>
+              </Button> */}
             </div>
             <div className="h-full flex flex-col p-4">
               <h2 className="text-lg font-semibold mb-4">System Logs</h2>

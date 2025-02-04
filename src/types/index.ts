@@ -11,6 +11,7 @@ export interface UploadedFile {
   type: FileType;
   meta: FileMeta;
   layers: any[];
+  file_bytes: number;
 }
 
 export enum FileType {
@@ -24,6 +25,24 @@ export interface ViewerState {
   files: UploadedFile[];
   logs: string[];
 }
+
+export interface FileVisualizerProps {
+  file: UploadedFile;
+  onLog: (message: string) => void;
+}
+
+export interface GeoJSONData {
+  type: string;
+  features: Array<{
+    type: string;
+    geometry: {
+      type: string;
+      coordinates: any;
+    };
+    properties?: Record<string, any>;
+  }>;
+}
+
 export enum LogLevel {
   INFO = "INFO",
   SUCCESS = "SUCCESS",
