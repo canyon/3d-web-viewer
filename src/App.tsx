@@ -13,6 +13,14 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import { UploadedFile, FileType, FileMeta } from "@/types";
@@ -80,9 +88,7 @@ export default function App() {
       setFiles((prev) => [...prev, ...newFiles]);
       if (newFiles.length > 0) {
         setActiveFileId(newFiles[0].id);
-        addLog(
-          `Uploaded file: ${newFiles.map((f) => f.file.name).join(", ")}`
-        );
+        addLog(`Uploaded file: ${newFiles.map((f) => f.file.name).join(", ")}`);
       }
     },
   });
@@ -182,9 +188,21 @@ export default function App() {
                 {logs.map((log, index) => (
                   <div
                     key={index}
-                    className="text-sm py-1 border-b border-border"
+                    className="text-sm py-1"
                   >
-                    {log}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>
+                        <div className="text-sm"><p>{log}</p></div></CardTitle>
+                        {/* <CardDescription></CardDescription> */}
+                      </CardHeader>
+                      {/* <CardContent>
+                      </CardContent> */}
+                      {/* <CardFooter>
+                        <p>Card Footer</p>
+                      </CardFooter> */}
+                    </Card>
+                    {/* {log} */}
                   </div>
                 ))}
               </ScrollArea>

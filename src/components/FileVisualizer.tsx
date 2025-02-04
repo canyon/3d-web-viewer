@@ -1,15 +1,14 @@
 // @ts-nocheck
 import { useEffect, useRef, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import Map, { Source, Layer, LayerProps } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { UploadedFile, FileType } from "@/types";
-// import * as PCL from "pcl.js";
-// import PointCloudViewer from "pcl.js/PointCloudViewer";
 import * as THREE from "three";
 import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { GUI } from "dat.gui";
+import { GUI } from "three/examples/jsm/libs/lil-gui.module.min.js";
 
 interface FileVisualizerProps {
   file: UploadedFile;
@@ -29,6 +28,7 @@ interface GeoJSONData {
 }
 
 const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
+  const { toast } = useToast()
   const [geoJSONData, setGeoJSONData] = useState<GeoJSONData | null>(null);
   const [viewState, setViewState] = useState({
     longitude: -100,
@@ -46,6 +46,22 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       loadGeoJSON();
     }
   }, [file]);
+
+  const toastAndLog = (title: string, error: boolean) => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: title,
+        // description: "Friday, February 10, 2023 at 5:57 PM",
+      });
+    } else {
+      toast({
+        title: title,
+        // description: "Friday, February 10, 2023 at 5:57 PM",
+      });
+    }
+    onLog(title);
+  };
 
   function getPoints(numberOfPoints: number) {
     const points = Array(numberOfPoints);
@@ -142,18 +158,18 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       1000
     );
     cameraRef.current.position.z = 5;
+    sceneRef.current.add(cameraRef.current);
 
     rendererRef.current = new THREE.WebGLRenderer({ antialias: true });
+    rendererRef.current.setPixelRatio(window.devicePixelRatio);
     rendererRef.current.setSize(width, height);
     threeContainerRef.current.appendChild(rendererRef.current.domElement);
-    // threeContainerRef.current.appendChild(pcdGUI.current.domElement);
 
-    const axisHelper = new THREE.AxesHelper(100);
+    const axisHelper = new THREE.AxesHelper(1);
     sceneRef.current.add(axisHelper);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     sceneRef.current.add(ambientLight);
-
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
     directionalLight.position.set(0, 1, 0);
     sceneRef.current.add(directionalLight);
@@ -162,20 +178,8 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       cameraRef.current,
       rendererRef.current.domElement
     );
-    controlsRef.current.enableDamping = true;
-    controlsRef.current.dampingFactor = 0.05;
     controlsRef.current.screenSpacePanning = true;
-    // controlsRef.current.minDistance = 0.5;
-    // controlsRef.current.maxDistance = 50;
-    controlsRef.current.update();
-
-    // if ((pcdGUI.current.__controllers.length = 0)) {
-    //   setupGUI();
-    // }
-    setupGUI();
-
-    window.addEventListener("resize", handleResize);
-    animate();
+    controlsRef.current.addEventListener("change", animate);
   };
 
   const handleResize = () => {
@@ -192,28 +196,13 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
     cameraRef.current.aspect = width / height;
     cameraRef.current.updateProjectionMatrix();
     rendererRef.current.setSize(width, height);
+    animate();
   };
 
   const animate = () => {
     if (!rendererRef.current || !cameraRef.current) return;
 
-    animationFrameId.current = requestAnimationFrame(animate);
-    controlsRef.current?.update();
     rendererRef.current.render(sceneRef.current, cameraRef.current);
-  };
-
-  const setupGUI = () => {
-    if ((pcdGUI.current.__controllers.length < 2)) {
-      pcdGUI.current
-        .add({ pointSize: 1.0 }, "pointSize", 0.1, 5)
-        .onChange((value: number) => {
-          if (pointCloudRef.current) {
-            (pointCloudRef.current.material as THREE.PointsMaterial).size =
-              value;
-          }
-          setPointSize(value);
-        });
-    }
   };
 
   const getColorFromHeight = (normalizedZ: number): THREE.Color => {
@@ -227,7 +216,8 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
       const arrayBuffer = await file.file.arrayBuffer();
 
       if (!arrayBuffer || arrayBuffer.byteLength === 0) {
-        onLog("Invalid PCD file: Empty or corrupted data.");
+        const msg = "Invalid PCD file: Empty or corrupted data.";
+        toastAndLog(msg, true);
         return;
       }
 
@@ -239,8 +229,41 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
           }
           pointCloudRef.current = points;
 
-          const allPositions = pointCloudRef.current.geometry.attributes.position
-            .array as Float32Array;
+          if (pcdGUI.current) {
+            pcdGUI.current.destroy();
+          }
+          pcdGUI.current = new GUI();
+          const pointFolder = pcdGUI.current.addFolder('Point Settings');
+          const settings = {
+            size: pointCloudRef.current.material.size || 0.005
+          };
+          pointFolder
+            .add(settings, 'size', 0.001, 0.1)
+            .name('Size')
+            .onChange((value) => {
+              if (pointCloudRef.current) {
+                pointCloudRef.current.material.size = value;
+                animate();
+              }
+            });
+          const materialParams = {
+            color: '#ffffff'
+          };
+          pointFolder
+            .addColor(materialParams, 'color')
+            .name('Color')
+            .onChange((value) => {
+              if (pointCloudRef.current) {
+                pointCloudRef.current.material.color.setHex(parseInt(value.replace('#', '0x')));
+                animate();
+              }
+            });
+
+          pointFolder.open();
+
+
+          const allPositions = pointCloudRef.current.geometry.attributes
+            .position.array as Float32Array;
           const positions = allPositions.filter((v) => !isNaN(v));
 
           const boundingBox = new THREE.Box3();
@@ -289,29 +312,36 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
           );
           sceneRef.current.add(pointCloudRef.current);
 
+          animate();
+
           // Print PCD info
           const fileSizeInBytes = arrayBuffer.byteLength;
           const fileSizeInKB = Math.round(fileSizeInBytes / 1024);
           const fileSizeInMB = fileSizeInBytes / 1024 / 1024;
           const fileSizeInMBDisplay =
             fileSizeInMB < 1 ? "<1" : Math.round(fileSizeInMB);
-          const pcdInfo = `File name: ${file.file.name}, Total Points:${points.geometry.attributes.position.count}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB)`;
-          onLog(`Successfully loaded point cloud: ${pcdInfo}`);
+          const pcdInfo = `File name: ${file.file.name}, Total Points: ${points.geometry.attributes.position.count}, File Size: ${fileSizeInBytes} bytes (${fileSizeInKB} KB, ${fileSizeInMBDisplay} MB)`;
+          const msg = `Successfully loaded point cloud: ${pcdInfo}`;
+          toastAndLog(msg, false);
         },
         (progress) => {
           const percent = ((progress.loaded / progress.total) * 100).toFixed(2);
-          onLog(`Loading progress: ${percent}%`);
+          const msg = `Loading progress: ${percent}%`;
+          toastAndLog(msg, false);
         },
         (error: any) => {
-          onLog(`Error loading point cloud: ${error.message}`);
+          const msg = `Error loading point cloud: ${error.message}`;
+          toastAndLog(msg, true);
         }
       );
+
+      window.addEventListener("resize", handleResize);
+      animate();
     } catch (error) {
-      onLog(
-        `Failed to load point cloud: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      const msg = `Failed to load point cloud: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`;
+      toastAndLog(msg, true);
     }
   };
 
@@ -355,13 +385,13 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
         }
       }
 
-      onLog(`Successfully loaded GeoJSON: ${file.file.name}`);
+      const msg = `Successfully loaded GeoJSON: ${file.file.name}`;
+      toastAndLog(msg, false);
     } catch (error) {
-      onLog(
-        `Failed to load GeoJSON: ${
+      const msg = `Failed to load GeoJSON: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+        }`;
+      toastAndLog(msg, true);
     }
   };
 
@@ -439,9 +469,6 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
   }
 
   return (
-    // <div ref={containerRef} className="w-full h-full">
-    //   <canvas ref={viewerRef} className="w-full h-full"></canvas>
-    // </div>
     <div ref={threeContainerRef} className="w-full h-full" />
   );
 };
