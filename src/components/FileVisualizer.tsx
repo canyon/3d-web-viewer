@@ -129,7 +129,7 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
 
   const threeContainerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef(new THREE.Scene());
-  const pcdGUI = useRef(new GUI());
+  const pcdGUI = useRef<GUI | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer>();
   const cameraRef = useRef<THREE.PerspectiveCamera>();
   const controlsRef = useRef<OrbitControls | null>(null);
@@ -243,8 +243,9 @@ const FileVisualizer = ({ file, onLog }: FileVisualizerProps) => {
 
           if (pcdGUI.current) {
             pcdGUI.current.destroy();
+          } else {
+            pcdGUI.current = new GUI();
           }
-          pcdGUI.current = new GUI();
           const pointFolder = pcdGUI.current.addFolder("Point Settings");
           const settings = {
             size:

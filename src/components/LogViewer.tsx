@@ -27,7 +27,7 @@ const LogViewer = (logs: LogViewerProps) => {
         }
 
         return (
-          <div key={index} className="text-sm py-1">
+          <div key={index} className="text-md py-1">
             <Card className="border border-gray-300 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-xs text-gray-600">
