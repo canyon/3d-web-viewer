@@ -130,6 +130,20 @@ export default function App() {
         <ResizablePanelGroup direction="horizontal">
           {/* Left Panel - File List */}
           <ResizablePanel defaultSize={20} minSize={0} maxSize={30}>
+            <div className=" w-full flex p-2 space-x-2">
+              <ModeToggle />
+
+              <Button asChild>
+                <a
+                  href="https://github.com/canyon/3d-web-viewer"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Github />
+                  Github
+                </a>
+              </Button>
+            </div>
             <div className="h-full flex flex-col p-4">
               <div
                 {...getRootProps()}
@@ -178,63 +192,47 @@ export default function App() {
 
           {/* Center Panel - Visualization */}
           <ResizablePanel defaultSize={80}>
-            <div className="h-full flex flex-col">
-              <Tabs value={activeFileId} className="w-full">
-                <ScrollArea className="w-full border-b">
-                  <TabsList className="inline-flex h-10 items-center justify-start px-4 w-full">
-                    {files.map((file) => (
-                      <TabsTrigger
-                        key={file.id}
-                        value={file.id}
-                        onClick={() => setActiveFileId(file.id)}
-                        className="relative"
-                      >
-                        {file.file.name}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                  <ScrollBar orientation="horizontal" />
-                </ScrollArea>
-              </Tabs>
-              <div className="w-full  h-screen  flex items-center justify-center ">
-                {activeFile ? (
-                  <FileVisualizer file={activeFile} onLog={addLog} />
-                ) : (
-                  <ReadmeCard />
-                )}
-              </div>
-            </div>
+            <ResizablePanelGroup direction="vertical">
+              <ResizablePanel defaultSize={80} minSize={0} maxSize={100}>
+                <div className="h-full flex flex-col">
+                  <Tabs value={activeFileId} className="w-full">
+                    <ScrollArea className="w-full border-b">
+                      <TabsList className="inline-flex h-10 items-center justify-start px-4 w-full">
+                        {files.map((file) => (
+                          <TabsTrigger
+                            key={file.id}
+                            value={file.id}
+                            onClick={() => setActiveFileId(file.id)}
+                            className="relative"
+                          >
+                            {file.file.name}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                      <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                  </Tabs>
+                  <div className="w-full  h-screen  flex items-center justify-center ">
+                    {activeFile ? (
+                      <FileVisualizer file={activeFile} onLog={addLog} />
+                    ) : (
+                      <ReadmeCard />
+                    )}
+                  </div>
+                </div>
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={20} minSize={0} maxSize={50}>
+                <div className="h-full flex flex-col p-4">
+                  <h2 className="text-lg font-semibold mb-4">System Logs</h2>
+                  <ScrollArea className="flex-1">
+                    <LogViewer logs={logs} />
+                  </ScrollArea>
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </ResizablePanel>
-
-          <ResizableHandle withHandle />
-
           {/* Right Panel - Logs */}
-          <ResizablePanel defaultSize={15} minSize={0} maxSize={30}>
-            <div className=" w-full flex p-2 space-x-2">
-              <ModeToggle />
-
-              <Button asChild>
-                <a
-                  href="https://github.com/canyon/3d-web-viewer"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Github />
-                  Github
-                </a>
-              </Button>
-              {/* <Button variant="outline" size="icon">
-                <a href="https://github.com/canyon/3d-web-viewer" target="_blank">
-                <Github /></a>
-              </Button> */}
-            </div>
-            <div className="h-full flex flex-col p-4">
-              <h2 className="text-lg font-semibold mb-4">System Logs</h2>
-              <ScrollArea className="flex-1 mb-16">
-                <LogViewer logs={logs} />
-              </ScrollArea>
-            </div>
-          </ResizablePanel>
         </ResizablePanelGroup>
       </div>
     </ThemeProvider>

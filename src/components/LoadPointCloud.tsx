@@ -58,6 +58,8 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
   const xyzLoaderRef = useRef(new XYZLoader());
   const plyLoaderRef = useRef(new PLYLoader());
   const pointCloudRef = useRef<THREE.Points | null>(null);
+  const boundingBoxRef = useRef<THREE.BoxHelper>();
+  // const axesRef = useRef<THREE.AxesHelper>();
 
   const initDisplay = () => {
     if (rendererRef.current) {
@@ -78,7 +80,7 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
     initDisplay();
 
     const width = threeContainerRef.current.clientWidth;
-    const height = threeContainerRef.current.clientHeight;
+    const height = window.innerHeight;
 
     cameraRef.current = new THREE.PerspectiveCamera(
       30,
@@ -93,9 +95,6 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
     rendererRef.current.setPixelRatio(window.devicePixelRatio);
     rendererRef.current.setSize(width, height);
     threeContainerRef.current.appendChild(rendererRef.current.domElement);
-
-    const axisHelper = new THREE.AxesHelper(1);
-    sceneRef.current.add(axisHelper);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     sceneRef.current.add(ambientLight);
@@ -120,7 +119,7 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
       return;
 
     const width = threeContainerRef.current.clientWidth;
-    const height = threeContainerRef.current.clientHeight;
+    const height = window.innerHeight;
 
     cameraRef.current.aspect = width / height;
     cameraRef.current.updateProjectionMatrix();
@@ -204,6 +203,11 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
       .array as Float32Array;
     const positions = allPositions.filter((v) => !isNaN(v));
 
+    pointCloudRef.current.geometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(new Float32Array(positions), 3)
+    );
+
     const boundingBox = new THREE.Box3();
     const center = new THREE.Vector3();
     boundingBox.setFromBufferAttribute(new THREE.BufferAttribute(positions, 3));
@@ -217,6 +221,19 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
       controlsRef.current.target.copy(center);
       controlsRef.current.update();
     }
+
+    if (boundingBoxRef.current) {
+      sceneRef.current.remove(boundingBoxRef.current);
+    }
+    boundingBoxRef.current = new THREE.BoxHelper(
+      pointCloudRef.current,
+      0xff0000
+    );
+    sceneRef.current.add(boundingBoxRef.current);
+
+    const boundingBoxInfo = `Bounding Box Dimensions: X=${size.x.toFixed(
+      2
+    )}, Y=${size.y.toFixed(2)}, Z=${size.z.toFixed(2)}`;
 
     const colors = new Float32Array(positions.length);
     let minZ = Infinity;
@@ -254,7 +271,7 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
       pointCloudRef.current.geometry.attributes.position.count
     }, ${getByteKBMBMsg(
       arrayBufferByteLength
-    )}, Load Time: ${loadDuration} seconds`;
+    )}, Load Time: ${loadDuration} seconds, ${boundingBoxInfo}`;
     const msg = `Successfully loaded point cloud: ${pcdInfo}`;
     toastAndLog(msg, LogLevel.SUCCESS);
   };
