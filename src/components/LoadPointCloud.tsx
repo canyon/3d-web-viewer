@@ -52,7 +52,7 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
   const controlsRef = useRef<OrbitControls | null>(null);
   const pcdLoaderRef = useRef(new PCDLoader());
   const xyzLoaderRef = useRef(new XYZLoader());
-  const plyLoaderRef = useRef(new XYZLoader());
+  const plyLoaderRef = useRef(new PLYLoader());
   const pointCloudRef = useRef<THREE.Points | null>(null);
 
   const initDisplay = () => {
