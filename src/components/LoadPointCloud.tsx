@@ -80,7 +80,7 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
     initDisplay();
 
     const width = threeContainerRef.current.clientWidth;
-    const height = window.innerHeight;
+    const height = threeContainerRef.current.clientHeight;
 
     cameraRef.current = new THREE.PerspectiveCamera(
       30,
@@ -108,6 +108,7 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
     );
     controlsRef.current.screenSpacePanning = true;
     controlsRef.current.addEventListener("change", animate);
+    threeContainerRef.current.addEventListener("resize", handleResize);
   };
 
   const handleResize = () => {
@@ -119,7 +120,7 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
       return;
 
     const width = threeContainerRef.current.clientWidth;
-    const height = window.innerHeight;
+    const height = threeContainerRef.current.clientHeight;
 
     cameraRef.current.aspect = width / height;
     cameraRef.current.updateProjectionMatrix();
@@ -128,8 +129,19 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
   };
 
   const animate = () => {
-    if (!rendererRef.current || !cameraRef.current) return;
+    if (
+      !rendererRef.current ||
+      !cameraRef.current ||
+      !threeContainerRef.current
+    )
+      return;
 
+    const width = threeContainerRef.current.clientWidth;
+    const height = threeContainerRef.current.clientHeight;
+
+    cameraRef.current.aspect = width / height;
+    cameraRef.current.updateProjectionMatrix();
+    rendererRef.current.setSize(width, height);
     rendererRef.current.render(sceneRef.current, cameraRef.current);
   };
 
