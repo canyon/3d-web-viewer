@@ -1,8 +1,20 @@
+
+![Vercel Deploy](https://deploy-badge.vercel.app/vercel/3d-web-viewer-pearl)
+![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
+![tailwindcss](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat&logo=tailwind-css&logoColor=white)
+
 # 🚀 3D Point Cloud & GeoJSON Visualization Web App
 
-This project is a **lightweight, front-end web application** built with **ReactJS** and **TailwindCSS**. It enables seamless visualization of **3D point cloud data** and **GeoJSON files**, offering an intuitive and interactive experience. The user interface is inspired by **VSCode**, ensuring a modern, efficient workflow.
+This project is a **lightweight, front-end web application** built with **ReactJS** and **TailwindCSS**. It enables seamless visualization of **3D point cloud data** and **GeoJSON files**, offering an intuitive and interactive experience.
 
----
+## 🛠️ Technology Stack
+
+- **Frontend Framework**: ReactJS ⚛️
+- **Styling**: TailwindCSS 🎨
+- **3D Rendering**: Three.js 🌍
+- **UI Components**: shadcn/ui 🏗️
+- **GIS Viewer Framework**: react-map-gl 🔄
+- **Build Tool**: Vite ⚡
 
 ## 🖼️ Interface Previews
 
@@ -13,8 +25,6 @@ Here are some screenshots showcasing the application:
 
 ![📌 3D Visualization Area](pics/image-2.png)
 *✨ Above: 3D point cloud visualization.*
-
----
 
 ## 🌟 Features
 
@@ -33,7 +43,6 @@ Here are some screenshots showcasing the application:
 - **JSON** 🗂️ (Generic JSON Data)
 - **GeoJSON** 🗺️ (Geographic JSON Data)
 
----
 
 ## 🎯 User Interface Overview
 
@@ -56,8 +65,6 @@ Here are some screenshots showcasing the application:
 ### 🔹 Expandable Panels
  **Custom Layout**: Toggle file list & logs for an optimal workspace.
 
----
-
 ## 🗃️ Sample Data
 
 🔹 The project includes **sample datasets** for testing and demonstration.
@@ -73,7 +80,6 @@ Example files:
 
 Simply **drag & drop** them into the app to explore their visualization! ✨
 
----
 
 ## 🔄 Why Switch to Three.js?
 
@@ -91,7 +97,6 @@ const cloud = PCL.loadPCDData<PCL.PointXYZ>(arrayBuffer, PCL.PointXYZ);
 
 **Solution:** Switched to **Three.js**, ensuring a more stable and versatile 3D rendering experience. 🏗️
 
----
 
 ## ⚡ How to Use
 
@@ -100,7 +105,6 @@ const cloud = PCL.loadPCDData<PCL.PointXYZ>(arrayBuffer, PCL.PointXYZ);
 3️⃣ **Use Functional Buttons** to adjust view settings. <br/>
 4️⃣ **Monitor Logs** for real-time updates.
 
----
 
 ## 🔧 Installation Guide
 
@@ -118,7 +122,6 @@ npm install
 npm run dev
 ```
 
----
 
 ## 🚀 Future Enhancements
 
