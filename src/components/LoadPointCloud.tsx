@@ -80,7 +80,7 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
     initDisplay();
 
     const width = threeContainerRef.current.clientWidth;
-    const height = threeContainerRef.current.clientHeight;
+    const height = window.innerHeight;
 
     cameraRef.current = new THREE.PerspectiveCamera(
       30,
@@ -119,7 +119,7 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
       return;
 
     const width = threeContainerRef.current.clientWidth;
-    const height = threeContainerRef.current.clientHeight;
+    const height = window.innerHeight;
 
     cameraRef.current.aspect = width / height;
     cameraRef.current.updateProjectionMatrix();
