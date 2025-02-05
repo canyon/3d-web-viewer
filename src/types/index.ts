@@ -49,3 +49,10 @@ export enum LogLevel {
   WARNING = "WARNING",
   ERROR = "ERROR",
 }
+
+export enum PCDFormat {
+  TXT = "txt",
+  PCD = "pcd",
+  XYZ = "xyz",
+  PLY = "ply",
+}
