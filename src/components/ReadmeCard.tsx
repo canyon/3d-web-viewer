@@ -26,7 +26,7 @@ export const ReadmeCard = () => {
           <b>Supported formats:</b>
           <span className="text-blue-600">
             {" "}
-            PCD 📌, XYZ 📍, TXT 📄, JSON 🗂️, GeoJSON 🗺️
+            PCD 📌, XYZ 📍, TXT 📄, PLY 🏗️, JSON 🗂️, GeoJSON 🗺️
           </span>
         </div>
       </CardContent>

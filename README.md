@@ -1,119 +1,135 @@
-# 3D Point Cloud and Geo-Json Visualization Web Application
 
-This project is a lightweight, front-end web application built with **ReactJS** and **TailwindCSS**. It is designed to visualize **3D point cloud data** and integrate basic **GIS viewing functionality**. The user interface is inspired by the **VSCode** layout and offers a clean and user-friendly experience.
+![Vercel Deploy](https://deploy-badge.vercel.app/vercel/3d-web-viewer-pearl)
+![React](https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=black)
+![tailwindcss](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat&logo=tailwind-css&logoColor=white)
 
-## Images
+# 🚀 3D Point Cloud & GeoJSON Visualization Web App
 
-Below are screenshots of the application interface:
+This project is a **lightweight, front-end web application** built with **ReactJS** and **TailwindCSS**. It enables seamless visualization of **3D point cloud data** and **GeoJSON files**, offering an intuitive and interactive experience.
 
-![File List Section](pics/image-1.png)
+## 🛠️ Technology Stack
 
-*Above: Geo-Json file visualization.*
+- **Frontend Framework**: ReactJS ⚛️
+- **Styling**: TailwindCSS 🎨
+- **3D Rendering**: Three.js 🌍
+- **UI Components**: shadcn/ui 🏗️
+- **GIS Viewer Framework**: react-map-gl 🔄
+- **Build Tool**: Vite ⚡
 
-![3D Visualization Area](pics/image-2.png)
+## 🖼️ Interface Previews
 
-*Above: 3D point cloud visualization.*
+Here are some screenshots showcasing the application:
 
-## Features
+![📂 File List Section](pics/image-1.png)
+*✨ Above: GeoJSON file visualization.*
 
-- **Left-side file list**: Users can drag and drop files for quick access and visualization.
-- **Log information section**: Positioned at the bottom, the log section displays key actions, events, and data status updates.
-- **3D display and operation area**: This section is located at the top and dynamically adjusts based on the selected file from the left-side list.
-- **Responsive UI**: The user interface adapts automatically based on the file selected, displaying appropriate UI elements and functionality buttons.
-- **Functionality buttons**: A vertically elongated button area is available to control various operations, and this area can be docked to the right side for more space-efficient use.
-- **Expandable/collapsible sections**: The file list and log information areas can be expanded or collapsed, docking to their respective sides.
-- **File list above 3D display**: The file list section opens horizontally above the 3D display area.
+![📌 3D Visualization Area](pics/image-2.png)
+*✨ Above: 3D point cloud visualization.*
 
-## Technology Stack
+## 🌟 Features
 
-- **Frontend Framework**: ReactJS
-- **Styling**: TailwindCSS
-- **3D Rendering**: Three.js
-- **File Formats Supported**:
-  - Point Cloud Data (PCD)
-  - GIS Data (GeoJSON)
-- **Additional Format Support**: The application will support future point cloud formats, including **TXT**, **LAS**, and **PLY**.
+- **Drag & Drop File Upload**: Easily load 3D point cloud and GIS files.
+- **Real-time Logs**: Track key actions and file statuses in the bottom log section.
+- **Interactive 3D Viewer**: Rotate, zoom, and manipulate point cloud data.
+- **Dynamic UI**: Interface elements adjust based on the selected file type.
+- **Customizable Layout**: Expand/collapse panels for optimized viewing.
+- **Multi-Format Support**: View diverse 3D data types.
 
-## User Interface
+### 📂 Supported Formats:
+- **PCD** 📌 (Point Cloud Data)
+- **XYZ** 📍 (Point Cloud XYZ Format)
+- **TXT** 📄 (Raw Data Points)
+- **PLY** 🏗️ (Polygon File Format)
+- **JSON** 🗂️ (Generic JSON Data)
+- **GeoJSON** 🗺️ (Geographic JSON Data)
 
-### 1. **Left-side File List**
-- Users can drag and drop files into this area to easily load them for visualization.
-- The file list should be easily scrollable and searchable, allowing users to quickly find the file they need.
 
-### 2. **Log Information Section**
-- Positioned at the bottom of the screen, this section provides real-time logs and information, such as loading statuses, errors, and actions performed.
-- The section can be expanded or collapsed to give more space for the 3D display area.
+## 🎯 User Interface Overview
 
-### 3. **Main 3D Display Area**
-- The top section of the screen will display the 3D point cloud data in an interactive viewer.
-- As users select different files, this section will automatically update to show the corresponding visualization.
-- The UI and functionality of this area will also adjust based on the selected file type (e.g., displaying buttons for rotating, zooming, or transforming the 3D model).
+### 🔹 Left-Side File List
+- **Drag & Drop** files for quick access.
+- **Search & Scroll** to find files easily.
 
-### 4. **Functionality Buttons Area**
-- A vertical bar of buttons is displayed on the right side, offering functions such as:
-  - Rotate/zoom the 3D point cloud.
-  - Switch between different visualization modes.
-  - Adjust data display settings.
-- This area is collapsible and can be docked to the right side for efficient use of space.
+### 🔹 Bottom Log Information
+- **Live Updates**: See loading statuses, errors, and actions.
+- **Collapsible**: Expand or hide logs as needed.
 
-### 5. **Expandable/Collapsible Sections**
-- Users can toggle the left-side file list and the log information section to maximize the 3D display area or focus on file management and logs.
+### 🔹 Main 3D Display
+- **Interactive Viewer**: Rotate, zoom, and analyze your data.
+- **Auto-Update**: Changes are reflected instantly upon file selection.
+- **Adaptive UI**: Tools adjust based on file type.
 
-## Why Switch to Three.js?
+### 🔹 Functionalities
+ **Tools**: Rotate, zoom, switch visualization modes, and tweak display settings.
 
-Initially, the project used **pcl.js** for point cloud visualization. However, when deploying on **Vercel**, an error occurred:
+### 🔹 Expandable Panels
+ **Custom Layout**: Toggle file list & logs for an optimal workspace.
 
-```
+## 🗃️ Sample Data
+
+🔹 The project includes **sample datasets** for testing and demonstration.
+
+📁 **Location**: `./sample_data/`
+
+Example files:
+- `sample_data/dragon.pcd` 📌 (Point Cloud)
+- `sample_data/dragon.xyz` 📍 (Point Cloud XYZ)
+- `sample_data/bunny.txt` 📄 (Point Cloud TXT)
+- `sample_data/dragon.ply` 🏗️ (3D Model)
+- `sample_data/example.json` 🗺️ (GIS Data)
+
+Simply **drag & drop** them into the app to explore their visualization! ✨
+
+
+## 🔄 Why Switch to Three.js?
+
+Initially, the project used **pcl.js** for point cloud visualization. However, deployment on **Vercel** resulted in errors:
+
+```sh
 Uncaught (in promise) TypeError: __PCLCore__[n.name] is not a constructor
     at new YB (index-C8DWNnQa.js:2576:7298)
 ```
 
-The error was triggered by the following pcl.js code:
-
-```typescript
-constructor(n=qg, s) {
-    this._PT = n,
-    this._native = s ?? new __PCLCore__[`PointCloud${n.name}`],
-    this.manager = new hw(this._native)
-}
-```
-
-When trying to load a PCD file:
-
+Caused by:
 ```typescript
 const cloud = PCL.loadPCDData<PCL.PointXYZ>(arrayBuffer, PCL.PointXYZ);
 ```
 
-Since **pcl.js** caused deployment issues, **Three.js** was chosen as a replacement due to its stability, flexibility, and wide support for 3D rendering.
+**Solution:** Switched to **Three.js**, ensuring a more stable and versatile 3D rendering experience. 🏗️
 
-## How to Use
 
-1. **Drag and Drop Files**: Drag and drop supported point cloud files (e.g., PCD, TXT, LAS, PLY) into the file list on the left side of the screen.
-2. **Visualize the Data**: Once a file is selected, the 3D point cloud will automatically load and display in the main display area.
-3. **Use Functional Buttons**: Utilize the vertical button area to control the visualization settings and interaction with the 3D data.
-4. **View Logs**: Monitor real-time actions, errors, and status updates in the log information section at the bottom.
+## ⚡ How to Use
 
-## Future Enhancements
+1️⃣ **Drag & Drop** supported files into the file list. <br/>
+2️⃣ **Visualize** the data interactively in the 3D viewer. <br/>
+3️⃣ **Use Functional Buttons** to adjust view settings. <br/>
+4️⃣ **Monitor Logs** for real-time updates.
 
-- **Add Support for More Formats**: Expand support to include additional point cloud data formats.
-- **Advanced GIS Features**: Integrate more advanced GIS functionalities such as map overlays and spatial analysis tools.
-- **Interactive Tools**: Add more interactive tools for manipulating point cloud data, including filters, measurements, and annotations.
 
-## Installation
+## 🔧 Installation Guide
 
-To run the project locally, follow these steps:
+💻 Run the project locally in 3 easy steps:
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/canyon/3d-web-viewer.git
-   ```
+```sh
+# 1️⃣ Clone the repository
+git clone https://github.com/canyon/3d-web-viewer.git
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+# 2️⃣ Install dependencies
+cd 3d-web-viewer
+npm install
 
-3. Start the development server:
-   ```bash
-   npm run dev
+# 3️⃣ Start the development server
+npm run dev
+```
+
+
+## 🚀 Future Enhancements
+
+🔹 **More File Format Support**: LAS, OBJ, and more. <br/>
+🔹 **Advanced GIS Features**: Map overlays, spatial analysis. <br/>
+🔹 **Interactive Tools**: Filtering, measurements, and annotations.
+
+---
+
+🔥 **Get Started & Explore the 3D Visualization World Now!** 🚀
 
