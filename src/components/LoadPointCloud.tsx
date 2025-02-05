@@ -11,6 +11,10 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GUI } from "three/examples/jsm/libs/lil-gui.module.min.js";
 
 export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
+  const POINT_SIZE_MAX = 0.01;
+  const POINT_SIZE_MIN = 0.00001;
+  const POINT_DEFAULT_SIZE = 0.001;
+
   const { toast } = useToast();
   const toastAndLog = (message: string, level: LogLevel) => {
     const now = new Date();
@@ -77,9 +81,9 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
     const height = threeContainerRef.current.clientHeight;
 
     cameraRef.current = new THREE.PerspectiveCamera(
-      75,
+      30,
       width / height,
-      0.1,
+      0.0001,
       1000
     );
     cameraRef.current.position.z = 5;
@@ -147,10 +151,13 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
     const pointFolder = pcdGUI.current.addFolder("Point Settings");
     const settings = {
       size:
-        (pointCloudRef.current.material as THREE.PointsMaterial).size || 0.005,
+        (pointCloudRef.current.material as THREE.PointsMaterial).size >
+        POINT_SIZE_MAX
+          ? POINT_SIZE_MAX
+          : POINT_DEFAULT_SIZE,
     };
     pointFolder
-      .add(settings, "size", 0.001, 0.1)
+      .add(settings, "size", POINT_SIZE_MIN, POINT_SIZE_MAX)
       .name("Size")
       .onChange((value) => {
         if (pointCloudRef.current) {
@@ -184,15 +191,12 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
     >,
     arrayBufferByteLength: number
   ) => {
-    if (!points || !pointCloudRef.current) return;
-
     if (pointCloudRef.current) {
       sceneRef.current.remove(pointCloudRef.current);
     }
 
     // Track start time for loading
     const startTime = performance.now();
-
     pointCloudRef.current = points;
     createGUI();
 
@@ -295,7 +299,15 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
           url,
           (geometry) => {
             geometry.center();
-            processPoints(new THREE.Points(geometry), arrayBufferByteLength);
+            const vertexColors = geometry.hasAttribute("color") === true;
+            const material = new THREE.PointsMaterial({
+              size: POINT_DEFAULT_SIZE,
+              vertexColors: vertexColors,
+            });
+            processPoints(
+              new THREE.Points(geometry, material),
+              arrayBufferByteLength
+            );
           },
           (progress) => {
             const percent = ((progress.loaded / progress.total) * 100).toFixed(
@@ -311,26 +323,34 @@ export const LoadPointCloud = ({ file, onLog }: FileVisualizerProps) => {
         );
         break;
 
-        case PCDFormat.PLY:
-          plyLoaderRef.current.load(
-            url,
-            (geometry) => {
-              geometry.computeVertexNormals()
-              processPoints(new THREE.Points(geometry), arrayBufferByteLength);
-            },
-            (progress) => {
-              const percent = ((progress.loaded / progress.total) * 100).toFixed(
-                2
-              );
-              const msg = `Loading progress: ${percent}%`;
-              toastAndLog(msg, LogLevel.INFO);
-            },
-            (error: any) => {
-              const msg = `Error loading point cloud: ${error.message}`;
-              toastAndLog(msg, LogLevel.ERROR);
-            }
-          );
-          break;
+      case PCDFormat.PLY:
+        plyLoaderRef.current.load(
+          url,
+          (geometry) => {
+            geometry.computeVertexNormals();
+            const vertexColors = geometry.hasAttribute("color") === true;
+            const material = new THREE.PointsMaterial({
+              size: POINT_DEFAULT_SIZE,
+              vertexColors: vertexColors,
+            });
+            processPoints(
+              new THREE.Points(geometry, material),
+              arrayBufferByteLength
+            );
+          },
+          (progress) => {
+            const percent = ((progress.loaded / progress.total) * 100).toFixed(
+              2
+            );
+            const msg = `Loading progress: ${percent}%`;
+            toastAndLog(msg, LogLevel.INFO);
+          },
+          (error: any) => {
+            const msg = `Error loading point cloud: ${error.message}`;
+            toastAndLog(msg, LogLevel.ERROR);
+          }
+        );
+        break;
       default:
         break;
     }

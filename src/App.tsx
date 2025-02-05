@@ -209,7 +209,7 @@ export default function App() {
           <ResizableHandle withHandle />
 
           {/* Right Panel - Logs */}
-          <ResizablePanel defaultSize={15} minSize={15} maxSize={30}>
+          <ResizablePanel defaultSize={15} minSize={0} maxSize={30}>
             <div className=" w-full flex p-2 space-x-2">
               <ModeToggle />
 
@@ -230,7 +230,7 @@ export default function App() {
             </div>
             <div className="h-full flex flex-col p-4">
               <h2 className="text-lg font-semibold mb-4">System Logs</h2>
-              <ScrollArea className="flex-1">
+              <ScrollArea className="flex-1 mb-16">
                 <LogViewer logs={logs} />
               </ScrollArea>
             </div>
