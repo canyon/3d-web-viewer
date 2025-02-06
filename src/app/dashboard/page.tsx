@@ -159,19 +159,23 @@ export default function Page() {
               </Button>
             </SidebarMenuButton>
           </SidebarHeader>
-          <SidebarContent className=" items-center">
-            <SidebarMenuButton className="h-16">
-              <CloudUpload size={64} />
-              <div
-                {...getRootProps()}
-                className="h-16 border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 cursor-pointer hover:border-muted-foreground/50 transition-colors"
-              >
-                <input {...getInputProps()} />
-                <p className="text-center text-muted-foreground">
-                  Drop files here or click to upload
-                </p>
-              </div>
-            </SidebarMenuButton>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarMenu>
+                <SidebarMenuButton className="h-32">
+                  <CloudUpload />
+                  <div
+                    {...getRootProps()}
+                    className="h-full border-2 border-dashed border-muted-foreground/25 rounded-lg cursor-pointer hover:border-muted-foreground/50 transition-colors"
+                  >
+                    <input {...getInputProps()} />
+                    <p className="mt-8 text-center text-muted-foreground">
+                      Drop files here or click to upload
+                    </p>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenu>
+            </SidebarGroup>
             <SidebarGroup>
               <h2 className="text-lg font-semibold mb-4">Files</h2>
               <SidebarMenu>

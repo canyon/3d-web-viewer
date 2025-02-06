@@ -1,9 +1,23 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import Map, { Source, Layer } from "react-map-gl";
+import Map, {
+  Marker,
+  Popup,
+  Source,
+  Layer,
+  NavigationControl,
+  FullscreenControl,
+  ScaleControl,
+  GeolocateControl,
+} from "react-map-gl";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { GeoJSONData, LogLevel, FileVisualizerProps } from "@/types";
+import {
+  GeoFeature,
+  GeoJSONData,
+  LogLevel,
+  FileVisualizerProps,
+} from "@/types";
 import { getLayerStyle } from "@/components/GeoLayerStyle";
 
 export const LoadGeoJSON = ({ file, onLog }: FileVisualizerProps) => {
@@ -36,6 +50,9 @@ export const LoadGeoJSON = ({ file, onLog }: FileVisualizerProps) => {
   };
 
   const [geoJSONData, setGeoJSONData] = useState<GeoJSONData | null>(null);
+  const [selectedFeature, setSelectedFeature] = useState<GeoFeature | null>(
+    null
+  );
   const [viewState, setViewState] = useState({
     longitude: -100,
     latitude: 40,
@@ -102,25 +119,63 @@ export const LoadGeoJSON = ({ file, onLog }: FileVisualizerProps) => {
     <Map
       {...viewState}
       onMove={(evt) => setViewState(evt.viewState)}
-      initialViewState={{
-        latitude: 40,
-        longitude: -100,
-        zoom: 3,
-      }}
       style={{ width: "100%", height: "100%" }}
-      // mapStyle="mapbox://styles/mapbox/standard"
       mapStyle="mapbox://styles/mapbox/streets-v12"
       mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
     >
-      {geoJSONData && (
-        <Source key={`geojson-source`} type="geojson" data={geoJSONData}>
-          {geoJSONData.features.map((feature, index) => (
-            <Layer
-              key={`layer-${index}`}
-              {...getLayerStyle(feature.geometry.type)}
-            />
-          ))}
-        </Source>
+      <GeolocateControl position="top-left" />
+      <FullscreenControl position="top-left" />
+      <NavigationControl position="top-left" />
+      <ScaleControl />
+      <Source id="geojson-source" type="geojson" data={geoJSONData}>
+        {geoJSONData?.features.map((feature, index) => {
+          if (feature.geometry.type === "Point") {
+            return (
+              <Marker
+                key={`marker-${index}`}
+                anchor="bottom"
+                longitude={feature.geometry.coordinates[0]}
+                latitude={feature.geometry.coordinates[1]}
+                onClick={(e) => {
+                  e.originalEvent.stopPropagation();
+                  setSelectedFeature(feature);
+                }}
+              />
+            );
+          } else {
+            return (
+              <Layer
+                key={`layer-${index}`}
+                {...getLayerStyle(feature.geometry.type)}
+              />
+            );
+          }
+        })}
+      </Source>
+      {selectedFeature && (
+        <Popup
+          longitude={Number(selectedFeature.geometry.coordinates[0])}
+          latitude={Number(selectedFeature.geometry.coordinates[1])}
+          onClose={() => setSelectedFeature(null)}
+        >
+          <div>
+            <h3>Feature Info</h3>
+            <p>
+              Coordinates: [{selectedFeature.geometry.coordinates.join(", ")}]
+            </p>
+            {selectedFeature.properties && (
+              <p>
+                {Object.entries(selectedFeature.properties).map(
+                  ([key, value]) => (
+                    <span key={key}>
+                      {key}: {String(value)} <br />
+                    </span>
+                  )
+                )}
+              </p>
+            )}
+          </div>
+        </Popup>
       )}
     </Map>
   );
