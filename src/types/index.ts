@@ -31,16 +31,18 @@ export interface FileVisualizerProps {
   onLog: (message: string) => void;
 }
 
+export interface GeoFeature {
+  type: string;
+  geometry: {
+    type: string;
+    coordinates: Array<number>;
+  };
+  properties: Record<string, any>;
+}
+
 export interface GeoJSONData {
   type: string;
-  features: Array<{
-    type: string;
-    geometry: {
-      type: string;
-      coordinates: any;
-    };
-    properties?: Record<string, any>;
-  }>;
+  features: Array<GeoFeature>;
 }
 
 export enum LogLevel {
