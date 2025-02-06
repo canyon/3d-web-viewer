@@ -142,7 +142,7 @@ export default function Page() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <SidebarProvider>
-        <Sidebar collapsible="icon" className="z-[100]">
+        <Sidebar collapsible="icon" className="z-[1]">
           <SidebarHeader>
             <SidebarMenuButton className="h-12 mb-1">
               <SidebarTrigger />
@@ -169,7 +169,7 @@ export default function Page() {
                     className="h-full border-2 border-dashed border-muted-foreground/25 rounded-lg cursor-pointer hover:border-muted-foreground/50 transition-colors"
                   >
                     <input {...getInputProps()} />
-                    <p className="mt-8 text-center text-muted-foreground">
+                    <p className="mt-10 text-center text-muted-foreground">
                       Drop files here or click to upload
                     </p>
                   </div>
