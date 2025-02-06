@@ -142,7 +142,7 @@ export default function Page() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <SidebarProvider>
-        <Sidebar collapsible="icon">
+        <Sidebar collapsible="icon" className="z-[100]">
           <SidebarHeader>
             <SidebarMenuButton className="h-12 mb-1">
               <SidebarTrigger />
@@ -227,7 +227,8 @@ export default function Page() {
             <ResizableHandle withHandle />
             <ResizablePanel defaultSize={20} minSize={0} maxSize={50}>
               <div className="h-full flex flex-col p-4">
-                <h2 className="text-lg font-semibold mb-2">System Logs</h2>
+                <h2 className="text-lg font-semibold mb-2">
+                <SidebarTrigger />Logs</h2>
                 <ScrollArea className="flex-1">
                   <LogViewer logs={logs} />
                 </ScrollArea>

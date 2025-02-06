@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Github } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const ReadmeCard = () => {
   return (
@@ -31,15 +32,20 @@ export const ReadmeCard = () => {
         </div>
       </CardContent>
       <CardFooter className="flex justify-center">
-        <a
-          href="https://github.com/canyon/3d-web-viewer"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center text-blue-600 hover:underline"
+        <Button
+          asChild
+          variant="outline"
+          className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
         >
-          <Github className="mr-2" />
-          View Example Files on GitHub
-        </a>
+          <a
+            href="https://github.com/canyon/3d-web-viewer?tab=readme-ov-file#%EF%B8%8F-sample-data"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Github className="mr-2 h-5 w-5" />
+            View Example Files on GitHub
+          </a>
+        </Button>
       </CardFooter>
     </Card>
   );
