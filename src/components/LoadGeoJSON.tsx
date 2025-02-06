@@ -154,6 +154,7 @@ export const LoadGeoJSON = ({ file, onLog }: FileVisualizerProps) => {
       </Source>
       {selectedFeature && (
         <Popup
+          anchor="top"
           longitude={Number(selectedFeature.geometry.coordinates[0])}
           latitude={Number(selectedFeature.geometry.coordinates[1])}
           onClose={() => setSelectedFeature(null)}
