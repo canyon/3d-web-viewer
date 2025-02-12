@@ -58,3 +58,7 @@ export enum PCDFormat {
   XYZ = "xyz",
   PLY = "ply",
 }
+
+export interface SwitchPageProps {
+  onNavigate: () => void;
+}
